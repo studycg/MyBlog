@@ -15,7 +15,15 @@ $$
 
 ```c++
 int main(){
-	std::cout << "Hello World" << std::endl;
+    std::cout << "Hello World" << std::endl;
     return 0;
 }
 ```
+
+## 图片显示测试Typora
+
+![image-20251124224526728](./assets/image-20251124224526728.png)
+
+## 图片显示测试Visual Studio Code
+
+![img_2025-11-24-23-17-39.png](assets/img_2025-11-24-23-17-39.png)
