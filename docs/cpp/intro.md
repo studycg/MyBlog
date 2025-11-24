@@ -1,15 +1,21 @@
-# 命名空间 namespace
+# 此页面为测试页
 
-这里是我的 C++ 学习笔记。
+这是初始化测试效果的页面
 
-## 作用
+## 公式显示测试
 
-1. 避免多人协作时的命名冲突。
-2. 组织代码结构。
+行内公式：$E=mc^2$
 
-## 代码示例
+块级公式（贝塞尔曲线）：
+$$
+B(t) = \sum_{i=0}^{n} \binom{n}{i} (1-t)^{n-i} t^i P_i, \quad t \in [0,1]
+$$
 
-```cpp
-namespace name1 {
-    int a = 10;
+## 代码块显示测试
+
+```c++
+int main(){
+	std::cout << "Hello World" << std::endl;
+    return 0;
 }
+```

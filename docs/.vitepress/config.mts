@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import mathjax3 from 'markdown-it-mathjax3' // 用来在 Markdown 中支持 LaTeX 公式
 
 // 这是一个 TypeScript 配置文件
 // 哪怕不懂 TS 语法，只修改文字内容也是没问题的
@@ -6,6 +7,13 @@ export default defineConfig({
   title: "我的知识库",
   description: "记录 C++ 与编程学习",
   
+  // 开启 Markdown 扩展配置
+  markdown: {
+    config: (md) => {
+      md.use(mathjax3)
+    }
+  },
+
   // 这里的 themeConfig 就是控制页面长相的核心
   themeConfig: {
     // 1. 顶部导航栏
