@@ -23,8 +23,8 @@ export default defineConfig({
 
     // 【新增】2. 界面汉化（把默认的英文提示改成中文）
     outline: {
-      level: 'deep', // 显示二级和三级标题
-      label: '页面导航' // 原本是 "On this page"
+      level: [1,6], // 显示一级到六级标题 'deep'为显示二到六级
+      label: '目录', // 原本是 "On this page"
     },
     docFooter: {
       prev: '上一篇',
@@ -47,6 +47,8 @@ export default defineConfig({
       { text: '杂谈', link: '/misc/intro' }
     ],
 
+    aside: true, // 显示右侧边栏
+    
     // 4. 多侧边栏配置 (核心功能)
     // 这种写法能让左侧菜单根据你所在的顶部栏自动切换
     sidebar: {
