@@ -41,9 +41,10 @@ export default defineConfig({
     nav: [
       { text: '首页', link: '/' },
       // 我们可以按你的技术栈把知识库分为几大块
-      { text: 'C++与建模', link: '/cpp/intro' },
+      { text: 'C++学习', link: '/cpp/intro' },
       { text: '计算机图形学', link: '/graphics/games101_1' },
       { text: 'Python可视化', link: '/python/intro' },
+      { text: '图书馆', link: '/library/' },
       { text: '杂谈', link: '/misc/intro' }
     ],
 
