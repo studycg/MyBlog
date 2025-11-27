@@ -10,6 +10,8 @@
 | 📘 | **Real Time Rendering** | 渲染经典著作 | [开始阅读](/library/real_time_rendering) |
 | 📗 | **Book_Polygon Mesh Processing** | 多边形网格处理 | [开始阅读](/library/polygon_mesh_processing) |
 | 📙 | **C++ Primer Plus** | C++必学经典 | [开始阅读](/library/polygon_mesh_processing) |
+| 🟦🟪🟩 | **Ray Tracing系列** | 理解渲染逻辑 | [开始阅读](/library/ray_tracing_serious) |
+
 
 ## 日语学习
 
