@@ -7,7 +7,7 @@ layout: home
 # 1. Hero 区域：第一眼看到的视觉中心
 hero:
   name: "Geom & Code"
-  text: "三维世界的构建者"
+  text: "我真的喜欢图形学"
   tagline: "C++ / ACIS / 算法 / 渲染"
   
   # 给大标题加个渐变色，看起来更有科技感

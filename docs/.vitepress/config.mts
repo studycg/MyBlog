@@ -43,9 +43,10 @@ export default defineConfig({
       // 我们可以按你的技术栈把知识库分为几大块
       { text: 'C++学习', link: '/cpp/intro' },
       { text: '计算机图形学', link: '/graphics/games101_1' },
-      { text: 'Python可视化', link: '/python/intro' },
+      { text: 'Hot100', link: '/hot100/questions1' },
       { text: '图书馆', link: '/library/' },
-      { text: '杂谈', link: '/misc/intro' }
+      { text: '杂谈', link: '/misc/intro' },
+      { text: 'C++多线程', link: '/cpp_multithreading/01basement' }
     ],
 
     aside: true, // 显示右侧边栏
@@ -60,38 +61,71 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: '简介', link: '/cpp/intro' },
+            { text: '处理数据', link: '/cpp/data' },
+            { text: '函数', link: '/cpp/function' },
+            { text: '深入函数', link: '/cpp/deepfunction' },
             { text: '命名空间', link: '/cpp/namespace' },
-            { text: '类与对象', link: '/cpp/class' }
+            { text: '类与对象', link: '/cpp/class' },
+            { text: '类和动态内存', link: '/cpp/memory' },
+            { text: '类继承', link: '/cpp/inheritance' },
+            { text: '代码重用与模板', link: '/cpp/reusing' },
+            { text: '友元和异常', link: '/cpp/friend' },
+            { text: 'STL', link: '/cpp/stringSTL'},
+            { text: 'C++11', link: '/cpp/C++new'}
           ]
         },
         {
-          text: 'C++面向对象',
+          text: 'C++多线程',
           collapsed: false,
           items: [
-            { text: '类和对象', link: '/cpp/class' },
-            { text: '多态与继承', link: '/cpp/inheritance' }
+            { text: '基础', link: '/cpp_multithreading/01basement' },
+            { text: '线程同步', link: '/cpp_multithreading/02synchronization' },
+            { text: '死锁与锁管理, link', link: '/cpp_multithreading/03deadlock' },
+            { text: '异步编程', link: '/cpp_multithreading/04asynchronous' },
+            { text: '条件变量', link: '/cpp_multithreading/05condition_variable' },
+            { text: '原子操作', link: '/cpp_multithreading/06atomic' },
+            { text: 'C++20新特性', link: '/cpp_multithreading/07C++20' }
           ]
         }
       ],
-
+      'cpp_multithreading':[
+        {
+          text: 'C++多线程',
+          collapsed: false,
+          items: [
+            { text: '基础', link: '/cpp_multithreading/01basement' },
+            { text: '线程同步', link: '/cpp_multithreading/02synchronization' },
+            { text: '死锁与锁管理', link: '/cpp_multithreading/03deadlock' },
+            { text: '异步编程', link: '/cpp_multithreading/04asynchronous' },
+            { text: '条件变量', link: '/cpp_multithreading/05condition_variable' },
+            { text: '原子操作', link: '/cpp_multithreading/06atomic' },
+            { text: 'C++20新特性', link: '/cpp_multithreading/07C++20' }
+          ]
+        }
+      ],
       '/graphics/': [
         {
           text: '计算机图形学',
           collapsed: false,
           items: [
-            { text: 'GAMES101第一课', link: '/graphics/games101_1' },
-            { text: 'GAMES101第二课', link: '/graphics/games101_2' }
+            { text: 'Overview', link: '/graphics/games101_1' },
+            { text: 'Review of Linear Algebra', link: '/graphics/games101_2' },
+            { text: 'Transformations', link: '/graphics/games101_3' },
+            { text: 'Transformations2', link: '/graphics/games101_4' },
+            { text: 'Rasterization', link: '/graphics/games101_5' },
+            { text: 'Rasterization2', link: '/graphics/games101_6' },
+            { text: 'Shading', link: '/graphics/games101_7' },
+            { text: 'Shading2', link: '/graphics/games101_8' },
           ]
         }
       ],
 
-      // 当路径包含 /python/ 时，显示这个菜单
-      '/python/': [
+      '/hot100/': [
         {
-          text: '数据可视化',
+          text: '刷算法题',
           items: [
-            { text: 'Matplotlib 基础', link: '/python/intro' },
-            { text: 'Plotly 交互图表', link: '/python/plotly' }
+            { text: '哈希', link: '/hot100/questions1' },
+            { text: '双指针', link: '/hot100/questions2' }
           ]
         }
       ]
