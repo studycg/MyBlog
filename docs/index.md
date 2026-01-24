@@ -8,7 +8,7 @@ layout: home
 hero:
   name: "Geom & Code"
   text: "我真的喜欢图形学"
-  tagline: "C++ / ACIS / 算法 / 渲染"
+  tagline: "C++ / Unity / CG / Render / OpenGL"
   
   # 给大标题加个渐变色，看起来更有科技感
   # image:
@@ -24,11 +24,11 @@ hero:
       text: "🚀 开始探索 C++"
       link: /cpp/intro
     - theme: alt
-      text: "🐍 Python 可视化"
+      text: "🧊 OpenGL"
       link: /python/intro
     - theme: alt
       text: "关于我"
-      link: /about
+      link: /resume
 
 # 2. 特性网格：这里做成“导航卡片”
 features:
@@ -36,14 +36,10 @@ features:
     details: 深入钻研 C++17/20 标准，掌握 STL、模板元编程与内存管理艺术。
     link: /cpp/intro
   
-  - title: 🧊 几何建模 (CAD)
-    details: 基于 ACIS/OCCT 内核，研究 NURBS 曲线曲面拟合、布尔运算与拓扑重构。
-    link: /cpp/point-cloud
+  - title: 💎 规划
+    details: 学习计划
+    link: /plane
     
-  - title: 📊 数据可视化
-    details: 使用 Python Plotly 与 Matplotlib 绘制高维数据，让算法结果可视可触。
-    link: /python/intro
-
   - title: 📝 读书与随笔
     details: 技术之外的思考，记录日语学习心得与生活碎片。
     link: /misc/diary

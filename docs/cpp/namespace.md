@@ -168,8 +168,8 @@ void update() {
 
 ~~~c++
 template <typename T>
-using Duo = std::pair<T, T>; // 定义一个无论如何两个类型都一样的模板
-pair Duo<int> coordinates; // 相当于 std::pair<int, int>
+using Duo = std::pair<T, T>; // 定义一个无论如何两个类型都一样的
+pair Duo<int> coordinates; // 相当于 std::pair<int, int>c++
 ~~~
 
 C++ 规定：**变量只能有一次“定义”，但可以有多次“引用声明”**。

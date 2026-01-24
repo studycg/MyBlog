@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简历生成器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* 左侧编辑面板 */
+        .left-panel {
+            width: 50%;
+            background-color: white;
+            overflow-y: auto;
+            border-right: 1px solid #e5e7eb;
+            padding: 2rem;
+        }
+
+        .left-panel h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            color: #111827;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.375rem;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        input[type="file"]:focus,
+        textarea:focus {
+            outline: none;
+            ring: 2px solid #60a5fa;
+            border-color: #60a5fa;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 3rem;
+        }
+
+        .photo-preview {
+            margin-top: 0.5rem;
+            width: 5rem;
+            height: 5rem;
+            border-radius: 0.25rem;
+            object-fit: cover;
+        }
+
+        .module-box {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: #f9fafb;
+            margin-bottom: 1.5rem;
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .module-header input {
+            flex: 1;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #f87171;
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-delete:hover {
+            color: #dc2626;
+        }
+
+        .experience-card {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .experience-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .experience-header input {
+            flex: 1;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-secondary {
+            background-color: #9ca3af;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background-color: #6b7280;
+        }
+
+        .btn-small {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .btn-add-field {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            color: #2563eb;
+            background: none;
+            border: none;
+        }
+
+        .btn-add-field:hover {
+            background-color: #eff6ff;
+        }
+
+        .custom-fields {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            align-items: flex-start;
+        }
+
+        .custom-fields-inputs {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        /* 右侧预览面板 */
+        .right-panel {
+            width: 50%;
+            background-color: #f3f4f6;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .resume-container {
+            width: 100%;
+        }
+
+        .resume-page {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            min-height: 1123px;
+            width: 100%;
+            max-width: 800px;
+            padding: 3rem;
+            page-break-after: always;
+        }
+
+        .resume-header {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .resume-photo {
+            width: 7rem;
+            height: 7rem;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .resume-title {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 1rem;
+        }
+
+        .resume-contact {
+            font-size: 0.875rem;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        .resume-section {
+            margin-bottom: 2rem;
+        }
+
+        .resume-section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #3b82f6;
+        }
+
+        .resume-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .resume-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.25rem;
+        }
+
+        .resume-item-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .resume-item-date {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .resume-item-company {
+            font-size: 0.875rem;
+            color: #4b5563;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .resume-item-desc {
+            font-size: 0.875rem;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .resume-footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .download-btn {
+            background-color: #22c55e;
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .download-btn:hover {
+            background-color: #16a34a;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧编辑面板 -->
+        <div class="left-panel">
+            <h1>简历编辑</h1>
+
+            <!-- 基本信息 -->
+            <div class="section">
+                <div class="section-title">个人信息</div>
+                
+                <div class="form-group">
+                    <label class="form-label">姓名</label>
+                    <input type="text" id="name" value="张三">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" id="email" value="zhangsan@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">电话</label>
+                    <input type="tel" id="phone" value="138-1234-5678">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">个人照片</label>
+                    <input type="file" id="photo" accept="image/*">
+                </div>
+
+                <!-- 自定义字段 -->
+                <div id="customFieldsContainer" class="form-group"></div>
+
+                <button class="btn-add-field" onclick="addCustomField()">+ 添加字段</button>
+            </div>
+
+            <!-- 模块管理 -->
+            <div id="modulesContainer"></div>
+
+            <!-- 底部按钮 -->
+            <div class="button-group">
+                <button class="btn-primary btn-small" onclick="addModule()">+ 添加模块</button>
+                <button class="btn-secondary btn-small" onclick="reset()">↻ 重置</button>
+            </div>
+        </div>
+
+        <!-- 右侧预览面板 -->
+        <div class="right-panel">
+            <div class="resume-container" id="resumeContainer"></div>
+            <button class="btn-primary download-btn" onclick="downloadPDF()">⬇ 保存为 PDF</button>
+        </div>
+    </div>
+
+    <script>
+        // 数据结构
+        let state = {
+            basicInfo: {
+                name: '张三',
+                email: 'zhangsan@email.com',
+                phone: '138-1234-5678',
+                photo: null,
+                customFields: [
+                    { id: 1, label: '年龄', value: '25' },
+                    { id: 2, label: '学校', value: '某大学' },
+                    { id: 3, label: '专业', value: '计算机科学' }
+                ],
+                nextFieldId: 4
+            },
+            modules: [
+                {
+                    id: 1,
+                    title: '工作经历',
+                    experiences: [
+                        { id: 1, title: '工作职位', company: '公司名称', date: '2023-2024', description: '职责描述' },
+                        { id: 2, title: '上一份工作', company: '前一家公司', date: '2022-2023', description: '职责描述' }
+                    ],
+                    nextExpId: 3
+                }
+            ],
+            nextModuleId: 2
+        };
+
+        // 初始化
+        function init() {
+            renderLeftPanel();
+            renderResume();
+
+            // 监听基本信息变化
+            document.getElementById('name').addEventListener('input', (e) => {
+                state.basicInfo.name = e.target.value;
+                renderResume();
+            });
+
+            document.getElementById('email').addEventListener('input', (e) => {
+                state.basicInfo.email = e.target.value;
+                renderResume();
+            });
+
+            document.getElementById('phone').addEventListener('input', (e) => {
+                state.basicInfo.phone = e.target.value;
+                renderResume();
+            });
+
+            document.getElementById('photo').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        state.basicInfo.photo = event.target.result;
+                        renderResume();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // 渲染左侧面板
+        function renderLeftPanel() {
+            renderCustomFields();
+            renderModules();
+        }
+
+        // 渲染自定义字段
+        function renderCustomFields() {
+            const container = document.getElementById('customFieldsContainer');
+            container.innerHTML = state.basicInfo.customFields.map(field => `
+                <div class="custom-fields">
+                    <div class="custom-fields-inputs">
+                        <input type="text" placeholder="字段名" value="${field.label}" 
+                            onchange="updateCustomField(${field.id}, 'label', this.value)">
+                        <input type="text" placeholder="字段值" value="${field.value}" 
+                            onchange="updateCustomField(${field.id}, 'value', this.value)">
+                    </div>
+                    <button class="btn-delete" onclick="removeCustomField(${field.id})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function addCustomField() {
+            state.basicInfo.customFields.push({
+                id: state.basicInfo.nextFieldId,
+                label: '新字段',
+                value: ''
+            });
+            state.basicInfo.nextFieldId++;
+            renderCustomFields();
+            renderResume();
+        }
+
+        function updateCustomField(id, field, value) {
+            const customField = state.basicInfo.customFields.find(f => f.id === id);
+            if (customField) {
+                customField[field] = value;
+                renderResume();
+            }
+        }
+
+        function removeCustomField(id) {
+            state.basicInfo.customFields = state.basicInfo.customFields.filter(f => f.id !== id);
+            renderCustomFields();
+            renderResume();
+        }
+
+        // 渲染模块
+        function renderModules() {
+            const container = document.getElementById('modulesContainer');
+            container.innerHTML = state.modules.map(module => `
+                <div class="module-box">
+                    <div class="module-header">
+                        <input type="text" value="${module.title}" 
+                            onchange="updateModuleTitle(${module.id}, this.value)">
+                        <button class="btn-delete" onclick="removeModule(${module.id})">✕</button>
+                    </div>
+
+                    <div style="margin-bottom: 0.75rem;">
+                        ${module.experiences.map(exp => `
+                            <div class="experience-card">
+                                <div class="experience-header">
+                                    <input type="text" value="${exp.title}" 
+                                        onchange="updateExperience(${module.id}, ${exp.id}, 'title', this.value)" placeholder="标题">
+                                    <button class="btn-delete" onclick="removeExperience(${module.id}, ${exp.id})">✕</button>
+                                </div>
+                                <input type="text" value="${exp.company}" 
+                                    onchange="updateExperience(${module.id}, ${exp.id}, 'company', this.value)" placeholder="详情/公司" style="margin-bottom: 0.5rem;">
+                                <input type="text" value="${exp.date}" 
+                                    onchange="updateExperience(${module.id}, ${exp.id}, 'date', this.value)" placeholder="时间" style="margin-bottom: 0.5rem;">
+                                <textarea placeholder="描述" onchange="updateExperience(${module.id}, ${exp.id}, 'description', this.value)">${exp.description}</textarea>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <button class="btn-primary btn-small" onclick="addExperience(${module.id})">+ 添加项目</button>
+                </div>
+            `).join('');
+        }
+
+        function addModule() {
+            state.modules.push({
+                id: state.nextModuleId,
+                title: '新模块',
+                experiences: [{
+                    id: 1,
+                    title: '项目名称',
+                    company: '详情',
+                    date: '年份',
+                    description: '描述'
+                }],
+                nextExpId: 2
+            });
+            state.nextModuleId++;
+            renderLeftPanel();
+            renderResume();
+        }
+
+        function removeModule(moduleId) {
+            state.modules = state.modules.filter(m => m.id !== moduleId);
+            renderLeftPanel();
+            renderResume();
+        }
+
+        function updateModuleTitle(moduleId, newTitle) {
+            const module = state.modules.find(m => m.id === moduleId);
+            if (module) {
+                module.title = newTitle;
+                renderResume();
+            }
+        }
+
+        function addExperience(moduleId) {
+            const module = state.modules.find(m => m.id === moduleId);
+            if (module) {
+                module.experiences.push({
+                    id: module.nextExpId,
+                    title: '新项目',
+                    company: '详情',
+                    date: '年份',
+                    description: '描述'
+                });
+                module.nextExpId++;
+                renderLeftPanel();
+                renderResume();
+            }
+        }
+
+        function updateExperience(moduleId, expId, field, value) {
+            const module = state.modules.find(m => m.id === moduleId);
+            if (module) {
+                const exp = module.experiences.find(e => e.id === expId);
+                if (exp) {
+                    exp[field] = value;
+                    renderResume();
+                }
+            }
+        }
+
+        function removeExperience(moduleId, expId) {
+            const module = state.modules.find(m => m.id === moduleId);
+            if (module) {
+                module.experiences = module.experiences.filter(e => e.id !== expId);
+                renderLeftPanel();
+                renderResume();
+            }
+        }
+
+        // 渲染简历
+        function renderResume() {
+            const USABLE_HEIGHT = 1000; // A4 可用高度
+            const pages = [];
+            let currentPage = [];
+            let currentHeight = 0;
+
+            const headerHeight = state.basicInfo.photo ? 200 : 120;
+
+            state.modules.forEach((module, moduleIdx) => {
+                let moduleHeight = 60;
+                module.experiences.forEach(exp => {
+                    const descLines = Math.ceil((exp.description.length || 0) / 40);
+                    moduleHeight += 100 + descLines * 20;
+                });
+                moduleHeight += 40;
+
+                if (moduleIdx === 0) {
+                    if (currentHeight + headerHeight + moduleHeight > USABLE_HEIGHT) {
+                        currentPage.push({ module, isFirstPage: false });
+                        pages.push(currentPage);
+                        currentPage = [{ module, isFirstPage: false }];
+                        currentHeight = moduleHeight;
+                    } else {
+                        currentPage.push({ module, isFirstPage: true });
+                        currentHeight += headerHeight + moduleHeight;
+                    }
+                } else {
+                    if (currentHeight + moduleHeight > USABLE_HEIGHT) {
+                        pages.push(currentPage);
+                        currentPage = [{ module, isFirstPage: false }];
+                        currentHeight = moduleHeight;
+                    } else {
+                        currentPage.push({ module, isFirstPage: false });
+                        currentHeight += moduleHeight;
+                    }
+                }
+            });
+
+            if (currentPage.length > 0) {
+                pages.push(currentPage);
+            }
+
+            const container = document.getElementById('resumeContainer');
+            container.innerHTML = pages.map((page, pageIdx) => `
+                <div class="resume-page">
+                    ${pageIdx === 0 ? `
+                        <div class="resume-header">
+                            ${state.basicInfo.photo ? `<img src="${state.basicInfo.photo}" class="resume-photo" alt="照片">` : ''}
+                            <div>
+                                <div class="resume-title">${state.basicInfo.name}</div>
+                                <div class="resume-contact">
+                                    <div>${state.basicInfo.email}</div>
+                                    <div>${state.basicInfo.phone}</div>
+                                    ${state.basicInfo.customFields.map(f => `<div>${f.label}: ${f.value}</div>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div>
+                        ${page.map(item => `
+                            <div class="resume-section">
+                                <div class="resume-section-title">${item.module.title}</div>
+                                ${item.module.experiences.map(exp => `
+                                    <div class="resume-item">
+                                        <div class="resume-item-header">
+                                            <div class="resume-item-title">${exp.title}</div>
+                                            <div class="resume-item-date">${exp.date}</div>
+                                        </div>
+                                        <div class="resume-item-company">${exp.company}</div>
+                                        <div class="resume-item-desc">${exp.description}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    ${pages.length > 1 ? `<div class="resume-footer">第 ${pageIdx + 1} 页，共 ${pages.length} 页</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // 下载 PDF
+        function downloadPDF() {
+            const element = document.getElementById('resumeContainer');
+            const opt = {
+                margin: 0,
+                filename: '简历.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // 重置
+        function reset() {
+            state = {
+                basicInfo: {
+                    name: '张三',
+                    email: 'zhangsan@email.com',
+                    phone: '138-1234-5678',
+                    photo: null,
+                    customFields: [
+                        { id: 1, label: '年龄', value: '25' },
+                        { id: 2, label: '学校', value: '某大学' },
+                        { id: 3, label: '专业', value: '计算机科学' }
+                    ],
+                    nextFieldId: 4
+                },
+                modules: [
+                    {
+                        id: 1,
+                        title: '工作经历',
+                        experiences: [
+                            { id: 1, title: '工作职位', company: '公司名称', date: '2023-2024', description: '职责描述' },
+                            { id: 2, title: '上一份工作', company: '前一家公司', date: '2022-2023', description: '职责描述' }
+                        ],
+                        nextExpId: 3
+                    }
+                ],
+                nextModuleId: 2
+            };
+
+            document.getElementById('name').value = '张三';
+            document.getElementById('email').value = 'zhangsan@email.com';
+            document.getElementById('phone').value = '138-1234-5678';
+            document.getElementById('photo').value = '';
+
+            renderLeftPanel();
+            renderResume();
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

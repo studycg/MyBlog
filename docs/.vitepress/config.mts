@@ -42,11 +42,13 @@ export default defineConfig({
       { text: '首页', link: '/' },
       // 我们可以按你的技术栈把知识库分为几大块
       { text: 'C++学习', link: '/cpp/intro' },
-      { text: '计算机图形学', link: '/graphics/games101_1' },
+      { text: 'C++八股', link: '/morecpp/morecpp_01' },
+      { text: 'C++多线程', link: '/cpp_multithreading/01basement' },
       { text: 'Hot100', link: '/hot100/questions1' },
+      { text: '计算机图形学', link: '/graphics/games101_1' },
+      { text: 'OpenGL', link: '/opengl/opengl_1' },
       { text: '图书馆', link: '/library/' },
-      { text: '杂谈', link: '/misc/intro' },
-      { text: 'C++多线程', link: '/cpp_multithreading/01basement' }
+      { text: '面试', link: '/interview/some_byhands' }
     ],
 
     aside: true, // 显示右侧边栏
@@ -88,7 +90,39 @@ export default defineConfig({
           ]
         }
       ],
-      'cpp_multithreading':[
+      '/interview/': [
+        {
+          text: '面试',
+          collapsed: false,
+          items: [
+            { text: '一些手撕', link: '/interview/some_byhands' },
+            { text: '单例模式', link: '/interview/singleton' }
+          ]
+        }
+      ],
+      '/morecpp/': [
+        {
+          text: 'C++八股',
+          collapsed: false,
+          items: [
+            { text: '基础补充', link: '/morecpp/morecpp_01' },
+            { text: '类和对象', link: '/morecpp/morecpp_02' },
+            { text: '内存管理', link: '/morecpp/morecpp_03' },
+            { text: '模板编程', link: '/morecpp/morecpp_04' },
+            { text: "继承", link: '/morecpp/morecpp_06' },
+            { text: '多态', link: '/morecpp/morecpp_07' },
+            { text: 'C++11', link: '/morecpp/morecpp_08' },
+            { text: '异常', link: '/morecpp/morecpp_09' },
+            { text: '智能指针', link: '/morecpp/morecpp_10' },
+            { text: '特殊类设计', link: '/morecpp/morecpp_11' },
+            { text: 'C++类型转换', link: '/morecpp/morecpp_12' },
+            { text: 'STL', link: '/morecpp/morecpp_13' }
+          ]
+        }
+      ],
+
+
+      '/cpp_multithreading/': [
         {
           text: 'C++多线程',
           collapsed: false,
@@ -99,7 +133,8 @@ export default defineConfig({
             { text: '异步编程', link: '/cpp_multithreading/04asynchronous' },
             { text: '条件变量', link: '/cpp_multithreading/05condition_variable' },
             { text: '原子操作', link: '/cpp_multithreading/06atomic' },
-            { text: 'C++20新特性', link: '/cpp_multithreading/07C++20' }
+            { text: 'C++20新特性', link: '/cpp_multithreading/07C++20' },
+            { text: '线程池', link: '/cpp_multithreading/08threadpool' }
           ]
         }
       ],
@@ -116,6 +151,13 @@ export default defineConfig({
             { text: 'Rasterization2', link: '/graphics/games101_6' },
             { text: 'Shading', link: '/graphics/games101_7' },
             { text: 'Shading2', link: '/graphics/games101_8' },
+            { text: 'Geometry1', link: '/graphics/games101_9' },
+            { text: 'Geometry2', link: '/graphics/games101_10' },
+            { text: 'Geometry3', link: '/graphics/games101_11' },
+            { text: 'Ray Tracing1', link: '/graphics/games101_12' },
+            { text: 'Ray Tracing2', link: '/graphics/games101_13' },
+            { text: 'Ray Tracing3', link: '/graphics/games101_14' },
+            { text: 'Ray Tracing4', link: '/graphics/games101_15' }
           ]
         }
       ],
