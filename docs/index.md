@@ -8,7 +8,7 @@ layout: home
 hero:
   name: "Geom & Code"
   text: "我真的喜欢图形学"
-  tagline: "C++ / Unity / CG / Render / OpenGL"
+  tagline: "C++ / C# / Unity / CG / Render / OpenGL"
   
   # 给大标题加个渐变色，看起来更有科技感
   # image:

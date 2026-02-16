@@ -41,11 +41,13 @@ export default defineConfig({
     nav: [
       { text: '首页', link: '/' },
       // 我们可以按你的技术栈把知识库分为几大块
-      { text: 'C++学习', link: '/cpp/intro' },
-      { text: 'C++八股', link: '/morecpp/morecpp_01' },
+      { text: 'C++基础', link: '/cpp/intro' },
+      { text: 'C++进阶', link: '/morecpp/morecpp_01' },
       { text: 'C++多线程', link: '/cpp_multithreading/01basement' },
+      { text: 'C#', link: '/csharp/csharp_1' },
       { text: 'Hot100', link: '/hot100/questions1' },
       { text: '计算机图形学', link: '/graphics/games101_1' },
+      { text: 'Unity', link: '/unity/unity_1' },
       { text: 'OpenGL', link: '/opengl/opengl_1' },
       { text: '图书馆', link: '/library/' },
       { text: '面试', link: '/interview/some_byhands' }
@@ -111,12 +113,41 @@ export default defineConfig({
             { text: '模板编程', link: '/morecpp/morecpp_04' },
             { text: "继承", link: '/morecpp/morecpp_06' },
             { text: '多态', link: '/morecpp/morecpp_07' },
-            { text: 'C++11', link: '/morecpp/morecpp_08' },
+            // { text: 'C++11', link: '/morecpp/morecpp_08' },
             { text: '异常', link: '/morecpp/morecpp_09' },
             { text: '智能指针', link: '/morecpp/morecpp_10' },
             { text: '特殊类设计', link: '/morecpp/morecpp_11' },
             { text: 'C++类型转换', link: '/morecpp/morecpp_12' },
-            { text: 'STL', link: '/morecpp/morecpp_13' }
+            // { text: 'STL', link: '/morecpp/morecpp_13' }
+          ]
+        },
+        {
+            text: 'C++11详细',
+            collapsed: false,
+            items: [
+              { text: '入门基础', link: '/morecpp/cpp11_01' },
+              { text: '右值引用和移动语义', link: '/morecpp/cpp11_02' },
+              { text: '类的新功能', link: '/morecpp/cpp11_03' },
+              { text: '可变参数模板', link: '/morecpp/cpp11_04' },
+              { text: 'lambda表达式', link: '/morecpp/cpp11_05' },
+              { text: '包装器', link: '/morecpp/cpp11_06' },
+              { text: '线程库', link: '/morecpp/cpp11_07' }
+            ]
+        },
+        {
+          text:"STL详细",
+          collapsed: false,
+          items: [
+            { text: 'string', link: '/morecpp/stl_00' },
+            { text: 'vector', link: '/morecpp/stl_01' },
+            { text: 'list', link: '/morecpp/stl_02' },
+            { text: 'stack和queue', link: '/morecpp/stl_03' },
+            { text: 'priority_queue', link: '/morecpp/stl_04' },
+            { text: 'set和map', link: '/morecpp/stl_05' },
+            { text: 'unordered_map和unordered_set', link: '/morecpp/stl_06' },
+            { text: 'bitset', link: '/morecpp/stl_07' },
+            { text: 'deque', link: '/morecpp/stl_08' },
+            { text: 'emplace/allocator', link: '/morecpp/stl_09' }
           ]
         }
       ],
@@ -165,9 +196,25 @@ export default defineConfig({
       '/hot100/': [
         {
           text: '刷算法题',
+          collapsed: true,
           items: [
             { text: '哈希', link: '/hot100/questions1' },
-            { text: '双指针', link: '/hot100/questions2' }
+            { text: '双指针', link: '/hot100/questions2' },
+            { text: '滑动窗口', link: '/hot100/questions3' },
+            { text: '子串', link: '/hot100/questions4' },
+            { text: '普通数组', link: '/hot100/questions5' },
+            { text: '矩阵', link: '/hot100/questions6' },
+            { text: '链表', link: '/hot100/questions7' },
+            { text: '二叉树', link: '/hot100/questions8' },
+            { text: '图论', link: '/hot100/questions9' },
+            { text: '回溯', link: '/hot100/questions10' },
+            { text: '二分查找', link: '/hot100/questions11' },
+            { text: '栈', link: '/hot100/questions12' },
+            { text: '堆', link: '/hot100/questions13' },
+            { text: '贪心', link: '/hot100/questions14' },
+            { text: '动态规划', link: '/hot100/questions15' },
+            { text: '多维动态规划', link: '/hot100/questions16' },
+            { text: '技巧', link: '/hot100/questions17' }          
           ]
         }
       ]

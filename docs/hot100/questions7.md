@@ -1,0 +1,883 @@
+> [!NOTE]
+>
+> 链表
+
+# 相交链表
+
+![image-20260215012514529](./assets/image-20260215012514529.png)
+
+**思路：**
+
+- `pA` 走完链表 A 之后，**立刻跳到链表 B 的头**继续走。
+- `pB` 走完链表 B 之后，**立刻跳到链表 A 的头**继续走。
+
+**之后：**
+
+- `pA` 的路线：走完 A (4步) -> 走 B 的非公共部分 (3步) -> **到达交点**。总共 7 步。
+- `pB` 的路线：走完 B (5步) -> 走 A 的非公共部分 (2步) -> **到达交点**。总共 7 步。
+
+**原理：**
+
+假设 A 的私有长度是 $a$，B 的私有长度是 $b$，公共长度是 $c$。
+
+- `pA` 走的路径长：$a + c + b$
+
+- `pB` 走的路径长：$b + c + a$
+
+  因为 $a + c + b = b + c + a$，所以他们一定会在**第二次进入公共部分时相遇**。
+
+第一次的错误写法
+
+```c++
+ListNode* getIntersectionNode(ListNode* headA, ListNode* headB) {
+	if (headA == nullptr || headB == nullptr) return nullptr;
+	ListNode* fA = headA;
+	ListNode* fB = headB;
+	while (fA != fB) {
+		if (fA->next == nullptr) {
+			fA = headB;
+		}
+		else {
+			fA = fA->next;
+		}
+		if (fB->next == nullptr) {
+			fB = headA;
+		}
+		else {
+			fB = fB->next;
+		}
+
+
+	}
+	return fA;
+}
+```
+
+第一次为什么错了？当两个链表没交点时会无限循环。
+
+正确写法
+
+```c++
+ListNode* getIntersectionNode(ListNode* headA, ListNode* headB) {
+    ListNode* fA = headA;
+    ListNode* fB = headB;
+
+    while (fA != fB) {
+        fA = (fA == nullptr) ? headB : fA->next;
+        fB = (fB == nullptr) ? headA : fB->next;
+    }
+
+    return fA;
+}
+```
+
+这个写法允许
+
+```c++
+A: a1 → a2 → a3 → null → b1 → b2 → null
+B: b1 → b2 → null → a1 → a2 → a3 → null
+```
+
+# 翻转链表
+
+![image-20260215142701604](./assets/image-20260215142701604.png)
+
+头插法
+
+```c++
+ListNode* reverseList(ListNode* head) {
+    // 1. 边界条件防御
+    if (head == nullptr || head->next == nullptr) return head;
+
+    // 2. 创建虚拟头节点 (哨兵)
+    // 它的 next 永远指向当前反转后的链表头部
+    ListNode* dummy = new ListNode(-1); 
+    dummy->next = head;
+
+    // 3. 定义两个指针
+    // prev: 永远指向原本的头节点 (现在的尾巴)，它像一个锚点，位置不变，负责"向后看"
+    // curr: 永远指向 prev 后面的那个节点 (也就是我们要移动到最前面的那个节点)
+    ListNode* prev = head;
+    ListNode* curr = prev->next;
+
+    // 4. 开始头插
+    while (curr != nullptr) {
+        // 第一步：先把 curr 从链表中摘除 (让 prev 连上 curr 的后面)
+        prev->next = curr->next;
+        
+        // 第二步：把 curr 插入到 dummy 后面 (插队)
+        curr->next = dummy->next;
+        dummy->next = curr;
+
+        // 第三步：更新 curr，准备处理下一个
+        // 注意：prev 不需要动！prev->next 自动就指向了新的"下一个待处理节点"
+        curr = prev->next; 
+    }
+
+    // 5. 取回结果，记得释放内存
+    ListNode* newHead = dummy->next;
+    delete dummy; 
+    return newHead;
+}
+```
+
+遍历法
+
+```c++
+ListNode* reverseList(ListNode* head) {
+    // prev 初始化为 nullptr，因为反转后的尾节点要指向 nullptr
+    ListNode* prev = nullptr;
+    ListNode* curr = head;
+
+    while (curr != nullptr) {
+        // 1. 暂存下一步（防止断链）
+        ListNode* nextTemp = curr->next;
+
+        // 2. 修改指向（核心反转）
+        curr->next = prev;
+
+        // 3. 整体向后移动
+        prev = curr;
+        curr = nextTemp;
+    }
+
+    // 最后 curr 是 null，prev 才是新的头节点
+    return prev;
+}
+```
+
+递归法
+
+```c++
+// 递归版本逻辑
+ListNode* reverseList(ListNode* head) {
+    // 终止条件：如果是空或者只有一个节点，直接返回
+    if (head == nullptr || head->next == nullptr) return head;
+    
+    // 1. 递归去反转剩下的链表 (假设 head->next 之后都已经反转好了)
+    // newHead 是反转后的新头节点 (比如 5)
+    ListNode* newHead = reverseList(head->next);
+    
+    // 2. 此时 head->next 指向的是反转后链表的"尾巴"
+    // 我们要把 head 自己挂到这个"尾巴"后面
+    head->next->next = head;
+    
+    // 3. 现在的 head 变成了新的尾巴，要指向 null
+    head->next = nullptr;
+    
+    return newHead;
+}
+```
+
+# 回文链表
+
+![image-20260215142639259](./assets/image-20260215142639259.png)
+
+```c++
+bool isPalindrome(ListNode* head) {
+    if (head == nullptr || head->next == nullptr) return true;
+
+    // 1. 快慢指针找中点
+    ListNode* slow = head;
+    ListNode* fast = head;
+    while (fast != nullptr && fast->next != nullptr) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    // 此时 slow 指向中间位置（如果是奇数长度，slow 在正中间；偶数长度，slow 在后半段的起始）
+    // 严格来说，对于奇数情况，slow 在正中间，不影响比较（因为反转后半段是从 slow 开始或者 slow->next）
+    // 这里的策略是：直接反转以 slow 为头的子链表
+
+    // 2. 反转后半部分链表
+    ListNode* secondHalf = reverseList(slow);
+    ListNode* p2 = secondHalf;
+    ListNode* p1 = head;
+
+    // 3. 比较前半部分和后半部分
+    bool result = true;
+    // 只需判断 p2 是否走完（因为后半段长度 <= 前半段）
+    while (result && p2 != nullptr) {
+        if (p1->val != p2->val) {
+            result = false;
+        }
+        p1 = p1->next;
+        p2 = p2->next;
+    }
+
+    // 4. (可选) 恢复链表结构 - 这是一个良好的工程习惯，虽然题目没强制要求
+    // reverseList(secondHalf);
+
+    return result;
+}
+```
+
+或者直接这样写
+
+```c++
+bool isPalindrome(ListNode* head) {
+	ListNode* slow = head;
+	ListNode* fast = head;
+	while (fast->next != nullptr && fast->next->next != nullptr) {
+		slow = slow->next;
+		fast = fast->next->next;
+	}
+	ListNode* rear = reverseList(slow->next);
+	ListNode* start = head;
+	while (rear != nullptr)
+	{
+		if (rear->val != start->val) {
+			return false;
+		}
+		rear = rear->next;
+		start = start->next;
+	}
+	return true;
+}
+```
+
+# 环形链表
+
+![image-20260215150020301](./assets/image-20260215150020301.png)
+
+哈希做法
+
+```c++
+bool hasCycle(ListNode* head) {
+	unordered_set<ListNode*> hash_set;
+	ListNode* start = head;
+	while (start != nullptr) {
+		if (hash_set.contains(start)) {
+			return true;
+		}
+		hash_set.insert(start);
+		start = start->next;
+	}
+	return false;
+}
+```
+
+快慢指针做法
+
+```c++
+
+```
+
+# 环形链表Ⅱ
+
+智谱一面
+
+![image-20260215144725032](./assets/image-20260215144725032.png)
+
+## 解方程
+
+**核心思路：数学推导 (a = c)**
+
+我们将链表分为三段距离：
+
+- **$a$**：从头节点到环入口的直线距离。
+- **$b$**：从环入口到相遇点的距离（在环内）。
+- **$c$**：从相遇点回到环入口的距离（环剩下的部分）。
+- **环的总长度**：$L = b + c$。
+
+**第一次相遇（快慢指针）**
+
+当 `fast` 和 `slow` 相遇时：
+
+1. **`slow` 走的距离**：$S = a + b$（注意：slow 进环后肯定能在第一圈被追上，不可能绕圈）。
+2. **`fast` 走的距离**：$F = a + b + n(b + c)$（fast 已经在环里转了 $n$ 圈了）。
+3. **核心约束**：快指针速度是慢指针的 2 倍，所以 $F = 2S$。
+
+**列方程：**
+
+$$2(a + b) = a + b + n(b + c)$$
+
+**化简：**
+
+$$a + b = n(b + c)$$
+
+$$a = n(b + c) - b$$
+
+这里的 $n(b + c)$ 就是 $n$ 圈。为了好理解，我们假设 $n=1$（fast 只多转了一圈就追上了），那么公式简化为：
+
+$$a = (b + c) - b$$
+
+$$a = c$$
+
+**得到结论从头节点走到环入口的距离 ($a$)，竟然等于“从相遇点继续走到环入口的距离 ($c$)**
+
+**Phase 1 (判断有无环)**：
+
+- 先用 `slow` 和 `fast` 跑，如果没相遇就返回 `null`。
+- 如果在某点相遇了，**把 `fast` 指针按住不动（或者用一个新指针 `ptr` 记录这个位置）**。
+
+**Phase 2 (找入口)**：
+
+- 把 `slow` 指针**扔回链表头 `head`**。
+- **关键点**：现在让 `slow` 和 `fast` **同时走，且每次都只走 1 步**。
+- 根据 $a = c$，它们必将在 **环入口** 相遇。
+
+正解：
+
+```c++
+ListNode *detectCycle(ListNode *head) {
+    ListNode* slow = head;
+    ListNode* fast = head;
+
+    // Phase 1: 寻找相遇点
+    while (fast != nullptr && fast->next != nullptr) {
+        slow = slow->next;
+        fast = fast->next->next;
+
+        if (slow == fast) {
+            // 相遇了！进入 Phase 2
+
+            // 1. 将其中一个指针扔回起点
+            ListNode* ptr1 = head;
+            ListNode* ptr2 = slow; // 另一个指针保留在相遇点
+
+            // 2. 两人同时走，每次一步
+            while (ptr1 != ptr2) {
+                ptr1 = ptr1->next;
+                ptr2 = ptr2->next;
+            }
+
+            // 3. 相遇的地方就是入口
+            return ptr1;
+        }
+    }
+
+    // 跑到底了都没相遇，说明没环
+    return nullptr;
+}
+```
+
+千万不要写成这样，因为这样比较的不是地址是值。
+
+```c++
+ListNode* detectCycle(ListNode* head) {
+    ListNode* slow = head;
+    ListNode* fast = head;
+    while (fast != nullptr && fast->next != nullptr) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow->val == fast->val) {
+            ListNode* p1 = head;
+            ListNode* p2 = fast;
+            while (p1->val != p2->val) {
+                p1 = p1->next;
+                p2 = p2->next;
+            }
+            return p1;
+        }
+    }
+    return nullptr;
+}
+```
+
+# 合并两个有序列表
+
+![image-20260215163330349](./assets/image-20260215163330349.png)
+
+不能写为：这样会发生未定义
+
+```c++
+ListNode* dummy;
+ListNode* tail = head;
+```
+
+迭代法
+
+```c++
+// 写法一：迭代法 (推荐，逻辑最清晰)
+ListNode* mergeTwoLists_Iterative(ListNode* list1, ListNode* list2) {
+    // 1. 创建虚拟头节点，避免处理头部的特殊情况
+    ListNode* dummy = new ListNode(-1);
+    ListNode* tail = dummy; // tail 永远指向当前合并链表的末尾
+
+    // 2. 谁小谁排前面
+    while (list1 != nullptr && list2 != nullptr) {
+        if (list1->val <= list2->val) {
+            tail->next = list1;   // 接入 list1
+            list1 = list1->next;  // list1 指针后移
+        } else {
+            tail->next = list2;   // 接入 list2
+            list2 = list2->next;  // list2 指针后移
+        }
+        tail = tail->next;        // tail 也要跟上
+    }
+
+    // 3. 处理剩余部分 (直接把剩下的一串接过来，不需要循环)
+    if (list1 != nullptr) {
+        tail->next = list1;
+    } else if (list2 != nullptr) {
+        tail->next = list2;
+    }
+
+    return dummy->next;
+}
+```
+
+递归法
+
+```c++
+ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
+    // 终止条件：如果有一个为空，返回另一个
+    if (list1 == nullptr) return list2;
+    if (list2 == nullptr) return list1;
+
+    // 递归逻辑
+    if (list1->val <= list2->val) {
+        // list1 是头，它的 next 是 "list1剩下的" 和 "list2" 合并的结果
+        list1->next = mergeTwoLists(list1->next, list2);
+        return list1;
+    } else {
+        // list2 是头
+        list2->next = mergeTwoLists(list1, list2->next);
+        return list2;
+    }
+}
+```
+
+# 两数相加
+
+![image-20260215165955680](./assets/image-20260215165955680.png)
+
+和高精度加法一个思路
+
+```c++
+ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+    ListNode* dummy = new ListNode(-1); // 虚拟头节点，方便操作
+    ListNode* curr = dummy;
+    int carry = 0; // 进位
+
+    // 只要 l1 还没走完，或者 l2 还没走完，或者还有进位没处理
+    // 就可以继续生成新节点
+    while (l1 != nullptr || l2 != nullptr || carry != 0) {
+        // 1. 获取两个链表当前位的值（如果为空则取0）
+        int val1 = (l1 != nullptr) ? l1->val : 0;
+        int val2 = (l2 != nullptr) ? l2->val : 0;
+
+        // 2. 计算当前位的和
+        int sum = val1 + val2 + carry;
+
+        // 3. 更新进位 和 当前位最终数字
+        carry = sum / 10;
+        int digit = sum % 10;
+
+        // 4. 创建新节点挂在后面
+        curr->next = new ListNode(digit);
+        curr = curr->next;
+
+        // 5. 指针后移 (注意判空)
+        if (l1 != nullptr) l1 = l1->next;
+        if (l2 != nullptr) l2 = l2->next;
+    }
+
+    return dummy->next;
+}
+```
+
+# 删除链表的倒数第n个结点
+
+![image-20260215173006773](./assets/image-20260215173006773.png)
+
+快慢指针
+
+```c++
+ListNode* removeNthFromEnd(ListNode* head, int n) {
+    // 1. 创建虚拟头节点 (Dummy Node)
+    // 这样做的好处是：即使删除的是第一个节点 (倒数第 L 个)，
+    // slow 指针也能停在 dummy 上，操作逻辑完全一致。
+    ListNode* dummy = new ListNode(-1);
+    dummy->next = head;
+
+    ListNode* fast = dummy;
+    ListNode* slow = dummy;
+
+    // 2. 让 fast 先走 n + 1 步
+    // 为什么是 n+1？因为我们想让 slow 停在被删节点的前一个位置
+    for (int i = 0; i <= n; i++) {
+        // 题目保证 n 是有效的，但工程上最好判空 fast
+        fast = fast->next;
+    }
+
+    // 3. 同时移动，直到 fast 走到末尾
+    while (fast != nullptr) {
+        fast = fast->next;
+        slow = slow->next;
+    }
+
+    // 4. 此时 slow 就在倒数第 n 个节点的前面
+    // 执行删除操作
+    ListNode* toDelete = slow->next;
+    slow->next = slow->next->next;
+
+    // 5. 释放内存 (C++ 良好习惯)
+    delete toDelete;
+
+    ListNode* ans = dummy->next;
+    delete dummy; // 别忘了释放哨兵
+    return ans;
+}
+```
+
+翻转做法
+
+```c++
+ListNode* removeNthFromEnd(ListNode* head, int n) {
+	ListNode* dummy = new ListNode(-1);
+	dummy->next = reverseList(head);
+	ListNode* curr = dummy;
+	int cnt = 1;
+	while (cnt != n) {
+		curr = curr->next;
+		cnt++;
+	}
+	ListNode* willdel = curr->next;
+	curr->next = curr->next->next;
+	delete willdel;
+	ListNode* ans = reverseList(dummy->next);
+	delete dummy;
+	return ans;
+}
+```
+
+# 两两交换链表中的结点
+
+![image-20260215180556738](./assets/image-20260215180556738.png)
+
+三步改链：
+
+**牵头**：让 `temp` 指向 `node2` (`temp->next = node2`)。
+
+**接尾**：让 `node1` 指向 `node3` (`node1->next = node2->next`)。
+
+**回手**：让 `node2` 指向 `node1` (`node2->next = node1`)。
+
+![image-20260215181721323](./assets/image-20260215181721323.png)
+
+```c++
+// 写法一：迭代法 (推荐面试使用，O(1) 空间，逻辑清晰)
+    ListNode* swapPairs_Iterative(ListNode* head) {
+    ListNode* dummy = new ListNode(-1);
+    dummy->next = head;
+
+    ListNode* temp = dummy;
+
+    // 只有当后面还有至少两个节点时，才进行交换
+    while (temp->next != nullptr && temp->next->next != nullptr) {
+        // 1. 定位要交换的两个节点
+        ListNode* node1 = temp->next;
+        ListNode* node2 = temp->next->next;
+
+        // 2. 三步修改指针 (画图最清晰)
+        temp->next = node2;       // 步骤1: 前驱指向第2个
+        node1->next = node2->next;// 步骤2: 第1个指向第3个 (这一步如果不先做，node3就丢了)
+        node2->next = node1;      // 步骤3: 第2个指向第1个
+
+        // 3. 准备下一轮
+        // 此时原来的 node1 变成了这一对的后一个，也就是下一对的前驱
+        temp = node1;
+    }
+
+    ListNode* ans = dummy->next;
+    delete dummy;
+    return ans;
+}
+```
+
+递归法
+
+**场景一：偶数个节点（`1 -> 2 -> null`）**
+
+1. **进入 `swapPairs(1)`**：
+   - `head` 是 `1`，`newHead` 是 `2`。
+   - 调用递归：`swapPairs(2->next)` 即 `swapPairs(null)`。
+2. **递归深处**：
+   - `swapPairs(null)` 触发 Base Case，直接返回 `nullptr`。
+3. **回到 `swapPairs(1)`**：
+   - 执行 `head->next = ...` (接收返回值)。
+   - 此时 `head->next` 变成了 `nullptr`。**注意：这里 `1` 不再指向 `2` 了，而是指向了 `null`。**
+   - 执行 `newHead->next = head`：即 `2 -> 1`。
+   - **结果**：`2 -> 1 -> null`。完美结束，无环。
+
+**场景二：奇数个节点（`1 -> 2 -> 3 -> null`）**
+
+这也是最容易让人担心的边缘情况。
+
+1. **进入 `swapPairs(1)`**：
+   - `head` 是 `1`，`newHead` 是 `2`。
+   - 调用递归：`swapPairs(3)`。
+2. **进入 `swapPairs(3)`（递归深处）**：
+   - `head` 是 `3`。
+   - 检查条件 `if (head->next == nullptr)` 成立！
+   - **Base Case 触发**：直接返回 `3` 这一节点本身。
+3. **回到 `swapPairs(1)`**：
+   - 递归返回了 `3`。
+   - 执行 `head->next = 3`。
+     - **动作**：斩断 `1 -> 2` 的旧连接，让 `1` 指向 `3`。
+     - 此时链表状态（局部）：`1 -> 3`。
+   - 执行 `newHead->next = head`。
+     - **动作**：让 `2` 指向 `1`。
+   - **结果**：`2 -> 1 -> 3 -> null`。
+   - 因为 `3` 本身的 `next` 已经是 `null` 了，所以整个链表自然结束，没有环。
+
+```c++
+// 写法二：递归法 (逻辑极美)
+ListNode* swapPairs(ListNode* head) {
+    // 终止条件：没有节点或只有一个节点，没法换
+    if (head == nullptr || head->next == nullptr) {
+        return head;
+    }
+
+    // newHead 是这一对里的第二个节点 (交换后的头)
+    ListNode* newHead = head->next;
+
+    // 递归处理第三个节点及其之后的部分
+    // head (原来的第1个) 现在的 next 应该是递归返回的结果
+    head->next = swapPairs(newHead->next);
+
+    // 让 newHead 指向 head (2 -> 1)
+    newHead->next = head;
+
+    return newHead;
+}
+```
+
+## 递归的两种分类
+
+**第一类：线性递归 (Linear Recursion) —— “一条绳子走到黑”**
+
+**你的感觉**：“向后摊开，再向前收敛”。
+
+这就是我们在**链表**中遇到的情况。
+
+- **结构**：单线条。
+- **动作**：
+  1. **递（Dive）**：像把一个弹簧压到底，或者像钻进一个深井，必须先一路走到终点（Base Case）。
+  2. **归（Surface）**：触底反弹，利用函数的返回值，一层一层地往回传，边传边处理。
+- **典型场景**：反转链表、阶乘计算 `f(n) = n * f(n-1)`。
+
+**形象比喻：俄罗斯套娃** 你必须先把娃娃一层层打开（递归展开），直到最小的那个（Base Case）。然后你再一层层盖回去（递归收敛），在盖回去的过程中，你才有机会对每一层做点手脚（比如 `head->next->next = head`）。
+
+------
+
+**第二类：树形递归 / 分治 (Tree Recursion / Divide and Conquer) —— “两翼包抄”**
+
+**你的感觉**：“从两个方向摊开，从两个方向往中间收敛”。
+
+这就是你以前可能遇到的 **归并排序 (Merge Sort)**、**二叉树遍历** 或者 **斐波那契数列**。
+
+- **结构**：分支状（像树根一样炸开）。
+- **动作**：
+  1. **分（Divide）**：大问题切成两半（甚至更多半），分别丢给两个递归函数去跑。
+  2. **治（Conquer）**：两个分支各自跑完，拿着结果回来汇报。
+  3. **合（Combine）**：站在当前节点，把左右手拿回来的结果拼在一起。
+- **典型场景**：归并排序、快速排序、二叉树的后序遍历。
+
+| **特性**            | **线性递归 (Linear)**    | **分治/树形递归 (Tree/Divide & Conquer)** |
+| ------------------- | ------------------------ | ----------------------------------------- |
+| **你的感觉**        | **弹簧/深井** (后摊前收) | **树杈** (两边摊中间收)                   |
+| **子问题数量**      | 1 个 (`f(n-1)`)          | 2 个或更多 (`f(n/2)`)                     |
+| **Call Stack 形状** | 一条直线 (`              | `)                                        |
+| **典型应用**        | 链表反转、阶乘           | 归并排序、二叉树遍历                      |
+| **空间复杂度**      | $O(N)$ (栈深)            | $O(\log N)$ (如果是平衡树)                |
+
+# k个一组翻转链表hard
+
+![image-20260215190226226](./assets/image-20260215190226226.png)
+
+遍历法
+
+```c++
+ListNode* reverseKGroup(ListNode* head, int k) {
+    // 虚拟头节点，作为第 0 组的尾巴，方便处理第 1 组
+    ListNode* dummy = new ListNode(-1);
+    dummy->next = head;
+
+    // pre 永远指向"上一组的尾巴"
+    ListNode* pre = dummy;
+
+    while (true) {
+        // 1. 检查剩余节点是否有 k 个
+        ListNode* end = pre;
+        for (int i = 0; i < k; i++) {
+            end = end->next;
+            // 如果不足 k 个，直接结束，不反转
+            if (end == nullptr) {
+                ListNode* ans = dummy->next;
+                delete dummy;
+                return ans;
+            }
+        }
+
+        // 此时：
+        // pre 是上一组结尾
+        // start 是本组开始 (pre->next)
+        // end 是本组结束
+        // nextGroup 是下一组开始 (end->next)
+
+        ListNode* start = pre->next;
+        ListNode* nextGroup = end->next;
+
+        // 2. 断开链表，准备反转
+        end->next = nullptr;
+
+        // 3. 反转当前组 (pre->next 指向新的头)
+        pre->next = reverse(start);
+
+        // 4. 接上下一组
+        // 反转后，start 变成了本组的尾巴，它应该连接 nextGroup
+        start->next = nextGroup;
+
+        // 5. 指针推进：pre 跳到本组的尾巴 (即 start)
+        pre = start;
+    }
+}
+```
+
+递归法
+
+```c++
+ListNode* reverseKGroup(ListNode* head, int k) {
+    // 1. 【侦查】往后找 k 个节点
+    ListNode* cursor = head;
+    for (int i = 0; i < k; i++) {
+        // 如果不足 k 个，说明到了链表最后，保持原样直接返回
+        if (cursor == nullptr) {
+            return head;
+        }
+        cursor = cursor->next;
+    }
+
+    // 此时 cursor 指向的是"下一组的开头"
+    // 也就是说，我们要翻转的区间是 [head, cursor) -> 左闭右开
+
+    // 2. 【翻转】反转当前这 k 个节点
+    // 这里我们可以直接复用反转链表的逻辑
+    // 只不过以前是反转到 null 结束，现在是反转到 cursor 结束
+    ListNode* newHead = reverse(head, cursor);
+
+    // 3. 【甩锅】递归处理剩下的，并连接起来
+    // 此时 head 变成了当前组的尾巴，它的 next 应该指向下一组递归的结果
+    head->next = reverseKGroup(cursor, k);
+
+    // 4. 【交差】返回新的头
+    return newHead;
+}
+```
+
+# 随机链表的复制
+
+![image-20260215195243336](./assets/image-20260215195243336.png)
+
+O(1)最优做法
+
+```c++
+Node* copyRandomList(Node* head) {
+    if (head == nullptr) return nullptr;
+
+    // Step 1: 复制每个节点，并插入到原节点后面
+    // 1 -> 2 -> 3  ==>  1 -> 1' -> 2 -> 2' -> 3 -> 3'
+    Node* curr = head;
+    while (curr != nullptr) {
+        Node* newNode = new Node(curr->val);
+        newNode->next = curr->next;
+        curr->next = newNode;
+        curr = newNode->next; // 跳两步，去处理下一个原节点
+    }
+
+    // Step 2: 处理 random 指针
+    curr = head;
+    while (curr != nullptr) {
+        // curr->next 就是克隆节点
+        if (curr->random != nullptr) {
+            // 克隆节点的 random = 原节点 random 的 next (也就是原节点 random 的克隆)
+            curr->next->random = curr->random->next;
+        }
+        // 跳两步
+        curr = curr->next->next;
+    }
+
+    // Step 3: 拆分链表 (恢复原链表，提取新链表)
+    curr = head;
+    Node* newHead = head->next;
+    Node* currNew = newHead;
+
+    while (curr != nullptr) {
+        // 恢复原链表: 1 -> 1' -> 2  ==>  1 -> 2
+        curr->next = curr->next->next;
+
+        // 恢复新链表: 1' -> 2 -> 2' ==> 1' -> 2'
+        if (currNew->next != nullptr) {
+            currNew->next = currNew->next->next;
+        }
+
+        // 两个指针都往后走
+        curr = curr->next;
+        currNew = currNew->next;
+    }
+
+    return newHead;
+}
+```
+
+哈希
+
+```c++
+Node* copyRandomList(Node* head) {
+	if (head == nullptr) return nullptr;
+	unordered_map<Node*, Node*> hash_map;
+	Node* curr = head;
+	while (curr != nullptr)
+	{
+		hash_map[curr] = new Node(curr->val);
+		curr = curr->next;
+	}
+	//for(pair<const Node*, Node*> ele:hash_maplian)
+	for (auto& ele : hash_map) {
+		Node* original = ele.first;
+		Node* copy = ele.second;
+		copy->next = (original->next) ? hash_map[original->next] : nullptr;
+		copy->random = (original->random) ? hash_map[original->random] : nullptr;
+	}
+	return hash_map[head];
+}
+```
+
+这样子写如果没有 直接新建一条hash_map[nullptr]=nullptr
+
+```c++
+Node* copyRandomList(Node* head) {
+    if (head == nullptr) return nullptr;
+
+    // 1. 定义哈希表: <原节点地址, 新节点地址>
+    unordered_map<Node*, Node*> map;
+
+    // 2. 第一遍遍历：只负责创建节点，存入 map
+    Node* curr = head;
+    while (curr != nullptr) {
+        map[curr] = new Node(curr->val);
+        curr = curr->next;
+    }
+
+    // 3. 第二遍遍历：负责连接 next 和 random
+    curr = head;
+    while (curr != nullptr) {
+        // 取出新节点
+        Node* newNode = map[curr];
+
+        // 连接 next: 查表找 old->next 对应的 new 节点
+        newNode->next = map[curr->next]; 
+
+        // 连接 random: 查表找 old->random 对应的 new 节点
+        newNode->random = map[curr->random];
+
+        curr = curr->next;
+    }
+
+    // 4. 返回原头节点对应的新头节点
+    return map[head];
+}
+```
+
