@@ -4,7 +4,7 @@
 
 # 动态规划
 
-**核心思想：用空间换时间，通过存储"子问题"的答案，避免重复计算**
+**把复杂问题拆成子问题，通过保存子问题结果来避免重复计算**
 
 ## 一、从“暴力递归”到“动态规划”
 
@@ -16,7 +16,7 @@
 
   为了算 $f(4)$，它又去算 $f(3)$ 和 $f(2)$。
 
-  **你看！$f(3)$ 被重复计算了多次。** 随着 $n$ 变大，这种重复会爆炸式增长（指数级复杂度）。
+  **$f(3)$ 被重复计算了多次。** 随着 $n$ 变大，这种重复会爆炸式增长（指数级复杂度）。
 
 - **动态规划（聪明式计算）**：
 
@@ -28,6 +28,10 @@
 
   **每个子问题只算一次。**（线性复杂度）。
 
+动态规划其实就是：
+
+> 带记忆的递归（记忆化搜索）
+
 ## 二、DP 的“三要素”
 
 要写出一个 DP 算法，你的大脑必须完成这三层逻辑构建：
@@ -36,8 +40,9 @@
 
 **大问题的最优解，包含了小问题的最优解。**
 
+f(n)=由若干 f(更小规模) 组合得到
+
 - **例子**：你想从 A 走到 C 路径最短。如果你发现 A -> B -> C 是最短的，那么 B -> C 也一定是 B 到 C 之间的最短路径。
-- **反例**：如果你想选出 10 个最聪明的人组成一个团队，这 10 个人并不一定是由“最聪明的 5 个人”和“次聪明的 5 个人”组成的（因为还要考虑团队配合）。这就不具备最优子结构。
 
 2. **重叠子问题**
 
@@ -64,11 +69,28 @@
 
 DP 不是一团乱麻，它是有固定套路的：
 
-- **基础 DP**：爬楼梯、斐波那契（理解递推）。
+- **基础线性DP**：爬楼梯、斐波那契（理解递推）。
 - **路径问题**：不同路径、最小路径和（二维数组填表）。
 - **背包问题**：01背包、完全背包（最经典，也最难）。
-- **打家劫舍/买卖股票**：带状态机（选还是不选？）。
-- **子序列问题**：最长递增子序列、最长公共子序列。
+- **状态机DP**：打家劫舍/买卖股票：带状态机（选还是不选？）。
+- **序列型DP**：最长递增子序列、最长公共子序列。
+- **区间DP**：`dp[l][r]`表示最优解
+
+# 背包问题思路
+
+## 0/1背包
+
+
+
+## 分组背包
+
+
+
+## 完全背包
+
+
+
+## 
 
 # 爬楼梯
 
@@ -84,40 +106,353 @@ dp[2]=2
 
 # 完全平方数
 
+完全背包问题
 
+![image-20260218171130714](./assets/image-20260218171130714.png)
 
+dp[i]=组成整数i所需的最少完全平方数个数
 
+```c++
+int numSquares(int n) {
+    vector<int> dp(n + 1);
+    
+    for (int i = 0; i <= n; i++) {
+        dp[i] = i;  // 最坏情况 i = 1+1+1+...+1
+    }
+
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j * j <= i; j++) {
+            dp[i] = min(dp[i], dp[i - j*j] + 1);
+        }
+    }
+
+    return dp[n];
+}
+```
+
+$dp[12]=min(dp[12],dp[8]+1)$
+
+$dp[4]=dp[0]+1=1$
+
+dp12=4+4+4
+
+看起来是j=1到j*j<=i只遍历了一次，但是每个dp元素都经过这样的遍历，所以完全背包的无限次使用隐含在了之前的遍历中。
 
 # 零钱兑换
 
+![image-20260218173000612](./assets/image-20260218173000612.png)
+
+这道题也是完全背包问题
+
+dp[i]=组成金额i所需的最少硬币数量
+
+```c++
+int coinChange(vector<int>& coins, int amount) {
+    // 1. dp[i] 表示凑齐金额 i 所需的最少硬币数
+    // 初始化为 amount + 1，表示一个无法达到的最大值
+    vector<int> dp(amount + 1, amount + 1);
+
+    // 3. 初始化基石
+    dp[0] = 0;
+
+    // 4. 遍历
+    for (int i = 1; i <= amount; i++) {       // 遍历背包（金额）
+        for (int coin : coins) {              // 遍历物品（面额）
+            // 只有当当前金额大于硬币面额时，才考虑这个硬币
+            if (i - coin >= 0) {
+                // 2. 递推：取当前值和（去掉这个硬币后的最优解+1）的最小值
+                dp[i] = min(dp[i], dp[i - coin] + 1);
+            }
+        }
+    }
+
+    // 5. 结果检查
+    // 如果 dp[amount] 还是初始值，说明凑不齐
+    return dp[amount] > amount ? -1 : dp[amount];
+}
+```
+
 # 单词拆分
+
+字节一面
+
+![image-20260218182605750](./assets/image-20260218182605750.png)
+
+$dp[i]$的含义：前i个字符是否可以被拆分，也就是$s[0:i−1]$是否可以被字典拆分。
+
+```c++
+bool wordBreak(string s, vector<string>& wordDict) {
+    // 将词典放入哈希表，提升查询速度
+    unordered_set<string> wordSet(wordDict.begin(), wordDict.end());
+
+    // 1. dp[i] 表示 s 的前 i 个字符是否可以拆分
+    vector<bool> dp(s.size() + 1, false);
+
+    // 3. 初始化：空字符串合法
+    dp[0] = true;
+
+    // 4. 遍历
+    for (int i = 1; i <= s.size(); i++) { // 遍历背包（字符串长度）
+        for (int j = 0; j < i; j++) {    // 遍历物品（拆分点）
+
+            // 2. 递推逻辑：
+            // 如果前 j 个字符合法，且剩余子串 [j, i) 在词典中
+            string sub = s.substr(j, i - j);
+            if (dp[j] && wordSet.count(sub)) {
+                dp[i] = true;
+                break; // 只要找到一种拆分方式，dp[i] 就是 true，直接跳出内层循环
+            }
+        }
+    }
+
+    return dp[s.size()];
+}
+```
 
 # 最长递增子序列
 
-## nlogn解法
+![image-20260218184547966](./assets/image-20260218184547966.png)
 
-# 最长公共子序列(!hot100)
-
-360 字节 百度
-
-![image-20260210120422339](./assets/image-20260210120422339.png)
+腾讯实习一面
 
 ```c++
+int lengthOfLIS(vector<int>& nums) {
+    int n = nums.size();
+    if (n == 0) return 0;
 
+    // 1. dp[i] 表示以 nums[i] 结尾的最长递增子序列长度
+    // 3. 初始化：每个元素单独都是长度为 1 的子序列
+    vector<int> dp(n, 1);
+    int maxLen = 1; // 记录全局最大值
+
+    // 4. 遍历
+    for (int i = 1; i < n; i++) {
+        for (int j = 0; j < i; j++) {
+            // 2. 递推逻辑：如果当前数比前面的大，尝试接在后面
+            if (nums[i] > nums[j]) {
+                dp[i] = max(dp[i], dp[j] + 1);
+            }
+        }
+        // 每算完一个 dp[i]，更新一次全局最大长度
+        maxLen = max(maxLen, dp[i]);
+    }
+
+    return maxLen;
+}
 ```
-
-
 
 # 乘积最大数组
 
-# 分割和子集
+![image-20260218191627832](./assets/image-20260218191627832.png)
 
-# 最长又有效括号hard
+负负得正 维持两个dp数组
 
-# 背包问题模板
+```c++
+int maxProduct(vector<int>& nums) {
+    int n = nums.size();
+    if (n == 0) return 0;
 
-## 0/1背包
+    // 1. 状态定义
+    // maxDP[i]: 以 i 结尾的最大乘积
+    // minDP[i]: 以 i 结尾的最小乘积
+    vector<int> maxDP(n);
+    vector<int> minDP(n);
 
-## 分组背包
+    // 3. 初始化
+    maxDP[0] = nums[0];
+    minDP[0] = nums[0];
+    int result = nums[0];
 
-## 完全背包
+    // 4. 遍历
+    for (int i = 1; i < n; i++) {
+        // 2. 状态转移方程
+        // 当前的最大值可能来自：
+        //   1. 当前数自己 (nums[i])
+        //   2. 前一个最大值乘当前数 (maxDP[i-1] * nums[i])
+        //   3. 前一个最小值乘当前数 (minDP[i-1] * nums[i]) -> 处理负负得正
+        maxDP[i] = max({nums[i], maxDP[i - 1] * nums[i], minDP[i - 1] * nums[i]});
+        minDP[i] = min({nums[i], maxDP[i - 1] * nums[i], minDP[i - 1] * nums[i]});
+
+        result = max(result, maxDP[i]);
+    }
+
+    return result;
+}
+```
+
+优化版
+
+更新 `maxVal` 时会改变它的值，而更新 `minVal` 时需要用到旧的 `maxVal`。所以我们要用临时变量。
+
+```c++
+int maxProduct(vector<int>& nums) {
+    int n = nums.size();
+    if (n == 0) return 0;
+
+    int maxVal = nums[0];
+    int minVal = nums[0];
+    int result = nums[0];
+
+    for (int i = 1; i < n; i++) {
+        int tempMax = maxVal; // 备份旧的最大值
+        
+        maxVal = max({nums[i], maxVal * nums[i], minVal * nums[i]});
+        minVal = min({nums[i], tempMax * nums[i], minVal * nums[i]});
+        
+        result = max(result, maxVal);
+    }
+    return result;
+}
+```
+
+# 分割等和子集
+
+![image-20260218203801578](./assets/image-20260218203801578.png)
+
+0/1背包
+
+```c++
+bool canPartition(vector<int>& nums) {
+    int sum = 0;
+    for (int num : nums) sum += num;
+
+    // 如果总和是奇数，直接判死刑
+    if (sum % 2 != 0) return false;
+    int target = sum / 2;
+    int n = nums.size();
+
+    // 1. dp[i][j] 表示前 i 个数能否凑成和为 j
+    vector<vector<bool>> dp(n + 1, vector<bool>(target + 1, false));
+
+    // 3. 初始化
+    for (int i = 0; i <= n; i++) dp[i][0] = true;
+
+    // 4. 遍历
+    for (int i = 1; i <= n; i++) {
+        int weight = nums[i - 1];
+        for (int j = 1; j <= target; j++) {
+            if (j < weight) {
+                // 背包太小，装不下当前数
+                dp[i][j] = dp[i - 1][j];
+            } else {
+                // 装得下：选或不选，只要有一个成，就成
+                dp[i][j] = dp[i - 1][j] || dp[i - 1][j - weight];
+            }
+        }
+    }
+    return dp[n][target];
+}
+```
+
+# 最长有效括号hard
+
+![image-20260218214057481](./assets/image-20260218214057481.png)
+
+```c++
+int longestValidParentheses(string s) {
+    int n = s.size();
+    if (n < 2) return 0;
+
+    // 1. dp[i] 表示以 s[i] 结尾的最长有效括号长度
+    vector<int> dp(n, 0);
+    int maxLen = 0;
+
+    // 只有 ) 结尾才有效，所以从 i=1 开始
+    for (int i = 1; i < n; i++) {
+        if (s[i] == ')') {
+            // 情况 1: 前一个是 (  => ...()
+            if (s[i - 1] == '(') {
+                dp[i] = (i >= 2 ? dp[i - 2] : 0) + 2;
+            } 
+            // 情况 2: 前一个是 )  => ...))
+            // 我们要找和当前 ) 匹配的那个 ( 在哪
+            else if (i - dp[i - 1] > 0 && s[i - dp[i - 1] - 1] == '(') {
+                // dp[i-1] 是内部的一串
+                // 2 是当前这一对
+                // dp[i - dp[i-1] - 2] 是这一对再往前的有效串
+                int prev = (i - dp[i - 1] >= 2) ? dp[i - dp[i - 1] - 2] : 0;
+                dp[i] = dp[i - 1] + 2 + prev;
+            }
+            maxLen = max(maxLen, dp[i]);
+        }
+    }
+    return maxLen;
+}
+```
+
+那么else if为什么没考虑到`s[i-dp[i-1]-1]==')'`的情况呢，比如`))()()()))`
+
+在这种情况下 dp[8]dp[9]都是0
+
+$dp[i]=以i结尾的最长有效括号长度$
+
+自然过滤掉了这种情况
+
+另外 关于数组下标
+
+```c++
+int prev = (i - dp[i - 1] >= 2) ? dp[i - dp[i - 1] - 2] : 0;
+//i-dp[i-1]其实是i-1-dp[i-1]+1 是i-1为)时(的下标
+//i-dp[i-1]-1是i-1-dp[i-1]+1-1 是i为)对应的(的下标
+```
+
+## 栈解法
+
+```c++
+int longestValidParentheses(string s) {
+    stack<int> st;
+    st.push(-1);
+    int maxlen = 0;
+
+    for (int i = 0; i < s.size(); i++) {
+        if (s[i] == '(') {
+            st.push(i);
+        } else {
+            st.pop();
+            if (st.empty()) {
+                st.push(i);
+            } else {
+                maxlen = max(maxlen, i - st.top());
+            }
+        }
+    }
+    return maxlen;
+}
+```
+
+## 双向扫描
+
+```c++
+int longestValidParentheses(string s) {
+    int left = 0, right = 0;
+    int maxlen = 0;
+
+    // 左 → 右
+    for (int i = 0; i < s.size(); i++) {
+        if (s[i] == '(') left++;
+        else right++;
+
+        if (left == right)
+            maxlen = max(maxlen, 2 * right);
+        else if (right > left)
+            left = right = 0;
+    }
+
+    // 右 → 左
+    left = right = 0;
+
+    for (int i = s.size() - 1; i >= 0; i--) {
+        if (s[i] == ')') right++;
+        else left++;
+
+        if (left == right)
+            maxlen = max(maxlen, 2 * left);
+        else if (left > right)
+            left = right = 0;
+    }
+
+    return maxlen;
+}
+```
+
+$left=′(′的数量 right=′)′的数量的数量$

@@ -37,6 +37,10 @@ int lengthOfLongestSubstring(string s) {
 }
 ```
 
+注意这里是`dict[ch]!=-1`而不是`dict[s[left]!=-1`
+
+注意`left = max(left, dict[ch]+1)`
+
 # 找到字符串中所有字母异位词
 
 ![image-20260213011021708](./assets/image-20260213011021708.png)
@@ -84,6 +88,20 @@ vector<int> findAnagrams(string s, string p) {
     }
 
     return ans;
+}
+```
+
+滑动窗口模板
+
+```c++
+for (right ...)
+{
+    加入右边;
+
+    if (窗口超长)
+        删除左边;
+
+    判断窗口;
 }
 ```
 

@@ -44,11 +44,12 @@ export default defineConfig({
       { text: 'C++基础', link: '/cpp/intro' },
       { text: 'C++进阶', link: '/morecpp/morecpp_01' },
       { text: 'C++多线程', link: '/cpp_multithreading/01basement' },
-      { text: 'C#', link: '/csharp/csharp_1' },
+      { text: '408复习', link: '/OS/OS_01' },
       { text: 'Hot100', link: '/hot100/questions1' },
       { text: '计算机图形学', link: '/graphics/games101_1' },
       { text: 'Unity', link: '/unity/unity_1' },
-      { text: 'OpenGL', link: '/opengl/opengl_1' },
+      { text: '其它疑问', link: '/other/random_algorithm' },
+      // { text: 'OpenGL', link: '/opengl/opengl_1' },
       { text: '图书馆', link: '/library/' },
       { text: '面试', link: '/interview/some_byhands' }
     ],
@@ -128,7 +129,7 @@ export default defineConfig({
               { text: '入门基础', link: '/morecpp/cpp11_01' },
               { text: '右值引用和移动语义', link: '/morecpp/cpp11_02' },
               { text: '类的新功能', link: '/morecpp/cpp11_03' },
-              { text: '可变参数模板', link: '/morecpp/cpp11_04' },
+              { text: '可变参数模板', link: '/morecpp/cpp11_04' }, 
               { text: 'lambda表达式', link: '/morecpp/cpp11_05' },
               { text: '包装器', link: '/morecpp/cpp11_06' },
               { text: '线程库', link: '/morecpp/cpp11_07' }
@@ -149,10 +150,17 @@ export default defineConfig({
             { text: 'deque', link: '/morecpp/stl_08' },
             { text: 'emplace/allocator', link: '/morecpp/stl_09' }
           ]
+        },        
+        {
+          text: '其它知识',
+          collapsed: false,
+          items: [
+            { text: '预处理编译汇编链接过程', link: '/morecpp/other_01' },
+            { text: '关键字复习', link: '/morecpp/other_02' },
+
+          ]
         }
       ],
-
-
       '/cpp_multithreading/': [
         {
           text: 'C++多线程',
@@ -160,11 +168,9 @@ export default defineConfig({
           items: [
             { text: '基础', link: '/cpp_multithreading/01basement' },
             { text: '线程同步', link: '/cpp_multithreading/02synchronization' },
-            { text: '死锁与锁管理', link: '/cpp_multithreading/03deadlock' },
             { text: '异步编程', link: '/cpp_multithreading/04asynchronous' },
             { text: '条件变量', link: '/cpp_multithreading/05condition_variable' },
             { text: '原子操作', link: '/cpp_multithreading/06atomic' },
-            { text: 'C++20新特性', link: '/cpp_multithreading/07C++20' },
             { text: '线程池', link: '/cpp_multithreading/08threadpool' }
           ]
         }
@@ -192,7 +198,6 @@ export default defineConfig({
           ]
         }
       ],
-
       '/hot100/': [
         {
           text: '刷算法题',
@@ -217,6 +222,28 @@ export default defineConfig({
             { text: '技巧', link: '/hot100/questions17' }          
           ]
         }
+      ],
+      '/other/': [
+        {
+          text: '其它疑问',
+          collapsed: false,
+          items: [
+            { text: '随机数算法', link: '/other/random_algorithm' },
+            { text: '寻路算法', link: '/other/pathfinding_algorithm' },
+          ]
+        }
+      ],
+      'unity/': [
+        { text: '发布者与订阅者模式', link: '/unity/unity_1' },
+        { text: '预制件', link: '/unity/unity_2' },
+        { text: '可脚本化对象', link: '/unity/unity_3' },
+        { text: '协程', link: '/unity/unity_4' },
+        { text: '对象池', link: '/unity/unity_5' },
+        { text: 'Unity6', link: '/unity/unity_6' },
+        { text: 'Unity7', link: '/unity/unity_7' },
+        { text: 'Unity8', link: '/unity/unity_8' },
+        { text: 'Unity9', link: '/unity/unity_9' },
+        { text: 'Unity10', link: '/unity/unity_10' }
       ]
     },
 

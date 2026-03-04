@@ -214,25 +214,68 @@ bool isPalindrome(ListNode* head) {
 或者直接这样写
 
 ```c++
-bool isPalindrome(ListNode* head) {
-	ListNode* slow = head;
-	ListNode* fast = head;
-	while (fast->next != nullptr && fast->next->next != nullptr) {
-		slow = slow->next;
-		fast = fast->next->next;
-	}
-	ListNode* rear = reverseList(slow->next);
-	ListNode* start = head;
-	while (rear != nullptr)
-	{
-		if (rear->val != start->val) {
-			return false;
-		}
-		rear = rear->next;
-		start = start->next;
-	}
-	return true;
+ListNode* reverse(ListNode* head) {
+    ListNode* prev = nullptr;
+    ListNode* curr = head;
+
+    while (curr) {
+        ListNode* next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
+    }
+    return prev;
 }
+
+bool isPalindrome(ListNode* head) {
+    if (!head || !head->next)
+        return true;
+
+    ListNode* slow = head;
+    ListNode* fast = head;
+
+    // 找中点
+    while (fast->next && fast->next->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    // 反转后半部分
+    ListNode* second = reverse(slow->next);
+
+    // 比较
+    ListNode* p1 = head;
+    ListNode* p2 = second;
+
+    while (p2) {
+        if (p1->val != p2->val)
+            return false;
+        p1 = p1->next;
+        p2 = p2->next;
+    }
+
+    return true;
+}
+```
+
+奇书长度时：
+
+```c++
+1 → 2 → 3 → 2 → 1
+1 → 2 → [3] → 2 → 1
+          ↑
+         slow
+```
+
+3不需要参与比较
+
+偶数长度时：
+
+```c++
+1 → 2 → 2 → 1
+1 → [2] → 2 → 1
+      ↑
+     slow
 ```
 
 # 环形链表
@@ -586,6 +629,29 @@ ListNode* removeNthFromEnd(ListNode* head, int n) {
 }
 ```
 
+```c++
+ListNode* swapPairs(ListNode* head) {
+    ListNode dummy(-1);
+    dummy.next = head;
+
+    ListNode* prev = &dummy;
+
+    while (prev->next && prev->next->next) {
+
+        ListNode* curr = prev->next;
+        ListNode* next = curr->next;
+
+        curr->next = next->next;
+        next->next = curr;
+        prev->next = next;
+
+        prev = curr;
+    }
+
+    return dummy.next;
+}
+```
+
 递归法
 
 **场景一：偶数个节点（`1 -> 2 -> null`）**
@@ -736,6 +802,44 @@ ListNode* reverseKGroup(ListNode* head, int k) {
 }
 ```
 
+```c++
+ListNode* reverseKGroup(ListNode* head, int k) {
+
+    ListNode dummy(0);
+    dummy.next = head;
+
+    ListNode* prev = &dummy;
+
+    while (true) {
+
+        // 1️⃣ 找k个节点
+        ListNode* end = prev;
+        for (int i = 0; i < k && end; i++)
+            end = end->next;
+
+        if (!end) break;
+
+        // 2️⃣ 记录边界
+        ListNode* start = prev->next;
+        ListNode* nextGroup = end->next;
+
+        // 3️⃣ 断开
+        end->next = nullptr;
+
+        // 4️⃣ 翻转
+        prev->next = reverse(start);
+
+        // 5️⃣ 接回
+        start->next = nextGroup;
+
+        // 6️⃣ 移动prev
+        prev = start;
+    }
+
+    return dummy.next;
+}
+```
+
 递归法
 
 ```c++
@@ -881,3 +985,318 @@ Node* copyRandomList(Node* head) {
 }
 ```
 
+# 排序链表
+
+![image-20260301000411653](./assets/image-20260301000411653.png)
+
+```c++
+ListNode* sortList(ListNode* head) {
+    // 1. Base Case: 如果为空或只有一个节点，不需要排序
+    if (head == nullptr || head->next == nullptr) {
+        return head;
+    }
+
+    // 2. 【分】找到中点，切断链表
+    // 技巧：fast 从 head->next 开始，这样 slow 会停在前半段的末尾
+    ListNode* slow = head;
+    ListNode* fast = head->next;
+
+    while (fast != nullptr && fast->next != nullptr) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    // 此时 slow 是中点（前半段尾巴），mid 是后半段开头
+    ListNode* mid = slow->next;
+    slow->next = nullptr; // 切断！
+
+    // 3. 【治】递归排序左右两半
+    ListNode* left = sortList(head);
+    ListNode* right = sortList(mid);
+
+    // 4. 【合】合并两个有序链表 (复用 No.21 的逻辑)
+    return mergeTwoLists(left, right);
+}
+
+// 直接复用 No.21 的合并代码
+ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
+    ListNode* dummy = new ListNode(-1);
+    ListNode* tail = dummy;
+
+    while (l1 != nullptr && l2 != nullptr) {
+        if (l1->val <= l2->val) {
+            tail->next = l1;
+            l1 = l1->next;
+        } else {
+            tail->next = l2;
+            l2 = l2->next;
+        }
+        tail = tail->next;
+    }
+
+    if (l1 != nullptr) tail->next = l1;
+    if (l2 != nullptr) tail->next = l2;
+
+    ListNode* ans = dummy->next;
+    delete dummy;
+    return ans;
+}
+```
+
+# 合并K个升序列表hard
+
+![image-20260301012738040](./assets/image-20260301012738040.png)
+
+使用最小堆来做
+
+```c++
+// 1. 定义仿函数 (Comparator)
+// C++ 的 priority_queue 默认是大顶堆 (大的在上面)
+// 我们需要小顶堆，所以这里要返回 "大于" (a > b)，让小的沉不下去，浮上来
+struct Compare {
+    bool operator()(ListNode* a, ListNode* b) {
+        return a->val > b->val;
+    }
+};
+
+ListNode* mergeKLists(vector<ListNode*>& lists) {
+    // 定义优先队列: <类型, 底层容器, 比较器>
+    priority_queue<ListNode*, vector<ListNode*>, Compare> pq;
+
+    // 2. 初始化：把所有链表的头节点放入堆中
+    for (ListNode* list : lists) {
+        if (list != nullptr) {
+            pq.push(list);
+        }
+    }
+
+    // 3. 开始合并
+    ListNode* dummy = new ListNode(-1);
+    ListNode* tail = dummy;
+
+    while (!pq.empty()) {
+        // 取出最小的
+        ListNode* minNode = pq.top();
+        pq.pop();
+
+        // 挂到结果链表后面
+        tail->next = minNode;
+        tail = tail->next;
+
+        // 如果这个节点后面还有人，把它推入堆中
+        if (minNode->next != nullptr) {
+            pq.push(minNode->next);
+        }
+    }
+
+    return dummy->next;
+}
+```
+
+仿函数使用lambda也是完全OK的
+
+```c++
+auto lmd = [](ListNode* a, ListNode* b) {
+    return a->val > b->val;
+};
+
+priority_queue<ListNode*, vector<ListNode*>, decltype(lmd)> pq(lmd);
+```
+
+使用两两归并来做：
+
+```c++
+ListNode* mergeKLists(vector<ListNode*>& lists) {
+    if (lists.empty()) return nullptr;
+    return merge(lists, 0, lists.size() - 1);
+}
+
+// 1. 分治主逻辑 (类似于归并排序)
+ListNode* merge(vector<ListNode*>& lists, int left, int right) {
+    // Base Case: 只剩一个链表，直接返回
+    if (left == right) return lists[left];
+
+    // 计算中点
+    int mid = left + (right - left) / 2;
+
+    // 递归合并左半部分
+    ListNode* l1 = merge(lists, left, mid);
+    // 递归合并右半部分
+    ListNode* l2 = merge(lists, mid + 1, right);
+
+    // 合并两部分结果
+    return mergeTwoLists(l1, l2);
+}
+
+// 2. 复用 No.21 的合并两个有序链表 (完全不用改)
+ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
+    ListNode* dummy = new ListNode(-1);
+    ListNode* tail = dummy;
+
+    while (list1 != nullptr && list2 != nullptr) {
+        if (list1->val <= list2->val) {
+            tail->next = list1;
+            list1 = list1->next;
+        } else {
+            tail->next = list2;
+            list2 = list2->next;
+        }
+        tail = tail->next;
+    }
+
+    if (list1 != nullptr) tail->next = list1;
+    if (list2 != nullptr) tail->next = list2;
+
+    ListNode* ans = dummy->next;
+    delete dummy;
+    return ans;
+}
+```
+
+# LRU缓存
+
+![image-20260304021231499](./assets/image-20260304021231499.png)
+
+这道题面经中出场次数太多了
+
+**`get(key)`**: 必须 $O(1)$。$\rightarrow$ 这意味着必须用 **哈希表**。
+
+**`put(key, value)`**: 必须 $O(1)$。
+
+- 如果满了，要删除“最近最少使用”的元素。
+- 这就涉及到“维护顺序”。哈希表是无序的，无法维护顺序。
+- **链表** 可以维护顺序，但链表查找是 $O(N)$。
+
+**哈希表 + 双向链表**
+
+我们构建一个混合体：
+
+- **双向链表**：用来存具体的数据节点 `(key, value)`。
+  - **约定**：靠头的是“最近使用过的 (Hot)”，靠尾的是“最近最少使用的 (Cold/LRU)”。
+- **哈希表**：存储 `key -> Node*` 的映射。
+  - 让我们能直接通过 key 瞬间抓到链表里的那个节点地址，不需要遍历链表。
+
+**为什么要用“双向”链表？**
+
+这是面试常问点。
+
+当我们通过哈希表找到节点 `node` 后，我们需要把它移动到头部。
+
+移动意味着：先**删除**，再**插入**。
+
+- 在单链表中，删除 `node` 需要知道它的**前驱** (`prev`)，这需要 $O(N)$ 遍历。
+- 在**双向链表**中，`node->prev` 直接就能找到前驱，删除操作是严格的 $O(1)$。
+
+几个原子函数
+
+**`removeNode(Node\* node)`**：把一个节点从链表中摘下来（孤立它）。
+
+**`addToHead(Node\* node)`**：把一个节点插到虚拟头节点之后。
+
+**`moveToHead(Node\* node)`**：组合拳 = `removeNode` + `addToHead`。
+
+为了避免处理 `head` 或 `tail` 为空的恶心边界情况，我们直接定义两个哨兵：`dummyHead` 和 `dummyTail`。链表永远长这样： `dummyHead <-> Node1 <-> Node2 <-> ... <-> dummyTail`
+
+
+```c++
+class LRUCache {
+    private:
+    // 1. 定义双向链表节点
+    struct Node {
+        int key, val;
+        Node *prev, *next;
+        Node(int k, int v) : key(k), val(v), prev(nullptr), next(nullptr) {}
+    };
+
+    // 2. 核心数据结构
+    int capacity;
+    unordered_map<int, Node*> map; // Key -> Node地址
+    Node* dummyHead; // 虚拟头
+    Node* dummyTail; // 虚拟尾
+
+    // --- 原子操作封装 (核心中的核心) ---
+
+    // 作用：从链表中移除节点 (断开连接，但不 delete 内存)
+    void removeNode(Node* node) {
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+
+    // 作用：把节点插入到头部 (dummyHead 后面)
+    void addToHead(Node* node) {
+        node->prev = dummyHead;
+        node->next = dummyHead->next;
+
+        dummyHead->next->prev = node; // 原来的第一个节点认新大哥
+        dummyHead->next = node;       // dummyHead 认新大哥
+    }
+
+    // 作用：把一个已存在的节点移到头部
+    void moveToHead(Node* node) {
+        removeNode(node);
+        addToHead(node);
+    }
+
+    // 作用：删除尾部节点 (淘汰最久未使用的)
+    Node* removeTail() {
+        Node* node = dummyTail->prev; // 真正的最后一个节点
+        removeNode(node);
+        return node;
+    }
+
+    public:
+    LRUCache(int capacity) : capacity(capacity) {
+        dummyHead = new Node(-1, -1);
+        dummyTail = new Node(-1, -1);
+        // 初始化链表: Head <-> Tail
+        dummyHead->next = dummyTail;
+        dummyTail->prev = dummyHead;
+    }
+
+    // 析构函数 (良好习惯，虽然刷题不写也行，但面试写了加分)
+    ~LRUCache() {
+        Node* curr = dummyHead;
+        while (curr) {
+            Node* next = curr->next;
+            delete curr;
+            curr = next;
+        }
+    }
+
+    int get(int key) {
+        // 1. 查表
+        if (map.find(key) == map.end()) {
+            return -1;
+        }
+
+        // 2. 找到了，这个节点变"热"了，移到头部
+        Node* node = map[key];
+        moveToHead(node);
+
+        return node->val;
+    }
+
+    void put(int key, int value) {
+        if (map.find(key) != map.end()) {
+            // Case 1: Key 已存在 -> 更新 value，移到头部
+            Node* node = map[key];
+            node->val = value;
+            moveToHead(node);
+        } else {
+            // Case 2: Key 不存在 -> 创建新节点
+            Node* newNode = new Node(key, value);
+
+            // 判断容量
+            if (map.size() >= capacity) {
+                // 满了！淘汰尾部
+                Node* tail = removeTail();
+                map.erase(tail->key); // 既然淘汰了，map里也要删 (注意：这里需要Node存key的原因)
+                delete tail;          // 释放内存
+            }
+
+            // 插入新节点到头部，并存入 map
+            addToHead(newNode);
+            map[key] = newNode;
+        }
+    }
+};

@@ -191,6 +191,8 @@ vector<int> productExceptSelf(vector<int>& nums) {
 
 ![image-20260213200357288](./assets/image-20260213200357288.png)
 
+原地哈希这个思路来看确实是hard
+
 ```c++
 int firstMissingPositive(vector<int>& nums) {
     int n = nums.size();
@@ -219,3 +221,27 @@ int firstMissingPositive(vector<int>& nums) {
 }
 ```
 
+但是如果直接用unordered_map
+
+```c++
+int firstMissingPositive(vector<int>& nums) {
+    unordered_map<int, int> occur;
+
+    for (auto num : nums) {
+        occur[num]++;
+    }
+
+    int currnum = 1;
+    while (true) {
+        if (occur.contains(currnum)) {
+            currnum++;
+        }
+        else {
+            break;
+        }
+    }
+    return currnum;
+}
+```
+
+很简单但是耗时很久

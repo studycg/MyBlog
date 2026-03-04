@@ -181,11 +181,32 @@ class Solution {
 };
 ```
 
-**为什么是 `<=` nums[mid]？**
+**无论怎么切，数组被 `mid` 一分为二后，其中一半一定是“有序”的。**
+
+每次算出 `mid` 后，我们将 `nums[mid]` 与 `nums[left]`（最左边）进行比较：
+
+1. **情况 A：`nums[left] <= nums[mid]`**
+   - **含义**：`left` 到 `mid` 是一路爬升的。说明 **[left, mid] 是有序的**（位于高坡）。
+   - **决策**：
+     - 如果 `target` 刚好落在这个有序区间里（`nums[left] <= target < nums[mid]`），那我们就去左边找（`right = mid - 1`）。
+     - 否则：`target` 肯定在右边那个乱七八糟的区间里，去右边找（`left = mid + 1`）。
+2. **情况 B：`nums[left] > nums[mid]`**
+   - **含义**：`left` 比 `mid` 还大，说明中间经历了断崖。那么 **[mid, right] 必然是有序的**（位于矮坡）。
+   - **决策**：
+     - 如果 `target` 刚好落在这个有序区间里（`nums[mid] < target <= nums[right]`），那我们就去右边找（`left = mid + 1`）。
+     - 否则：`target` 肯定在左边那个乱七八糟的区间里，去左边找（`right = mid - 1`）。
+
+> 为什么是 `nums[left]<=nums[mid]`?
 
 主要是为了处理 `left == mid` 的情况（比如只有两个元素 `[3, 1]`）。
 
 当 `left == mid` 时，我们可以认为左边（只有一个元素）是有序的，逻辑依然成立。
+
+> 为什么是`nums[left] <= target`和`target <= nums[right]`
+
+如果不是`<=`那么nums[left] == target时永远不会进入判断，导致漏解。
+
+> 与下一道题最小值这道题比较
 
 **找最小值**：我们只关心“断崖”在哪，所以和 `nums[right]` 比。
 
@@ -224,6 +245,24 @@ class Solution {
 };
 ```
 
+**情况 A：`nums[mid] > nums[right]`**
+
+- **含义**：`mid` 的值比最右边还大。说明 `mid` 还在 **左半段（高坡）** 上。
+- **推论**：最小值（断崖）肯定在 `mid` 的 **右边**。
+- **行动**：`left = mid + 1`。
+
+**情况 B：`nums[mid] < nums[right]`**
+
+- **含义**：`mid` 的值比最右边小。说明 `mid` 已经在 **右半段（矮坡）** 上了。
+- **推论**：最小值可能是 `mid` 自己，也可能在 `mid` 的 **左边**（如果 `mid` 后面还有更小的）。
+- **行动**：`right = mid`。
+  - **注意**：这里不是 `mid - 1`，因为 `mid` 自己可能就是那个最小值，不能排除掉。
+
+**为什么是 `while (left < right)` 而不是 `<=`？**
+
+- 之前的题目（找 target），我们有可能在 `mid` 就找到了并返回，所以要一直缩到空为止。
+- 这道题我们是要**逼近**到一个点。当 `left == right` 时，我们就锁定了唯一的嫌疑人，此时不需要再进循环判断了，直接输出它即可。
+
 # 寻找两个正序数组中的中位数[Hard]
 
 ![image-20260209213847221](./assets/image-20260209213847221.png)
@@ -239,12 +278,14 @@ double findMedianSortedArrays(vector<int>& A, vector<int>& B) {
     while (left <= right) {
         int i = (left + right) / 2;
         int j = (m + n + 1) / 2 - i;
-
+		
+        //i和j最大不是m-1和n-1 因为i和j不是数组下标而是指划分位置
         int L1 = (i == 0) ? INT_MIN : A[i - 1];
         int R1 = (i == m) ? INT_MAX : A[i];
         int L2 = (j == 0) ? INT_MIN : B[j - 1];
         int R2 = (j == n) ? INT_MAX : B[j];
-
+		
+        //注意这里是<=而不是<
         if (L1 <= R2 && L2 <= R1) {
             if ((m + n) % 2 == 1)
                 return max(L1, L2);
@@ -256,6 +297,62 @@ double findMedianSortedArrays(vector<int>& A, vector<int>& B) {
         }
         else {
             left = i + 1;
+        }
+    }
+    return 0.0;
+}
+```
+
+```c++
+double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+    // 1. 始终保证 nums1 是较短的那个数组
+    // 这样我们二分 nums1 时，算出来的 j 肯定不会越界
+    if (nums1.size() > nums2.size()) {
+        return findMedianSortedArrays(nums2, nums1);
+    }
+
+    int m = nums1.size();
+    int n = nums2.size();
+
+    // 左半边需要的元素总个数 (m + n + 1) / 2
+    // 这种写法既能处理奇数总长，也能处理偶数总长
+    int totalLeft = (m + n + 1) / 2;
+
+    // 2. 在 nums1 上进行二分查找
+    // 我们要找的是分割线 i 的位置，i 的取值范围是 [0, m]
+    int left = 0;
+    int right = m;
+
+    while (left <= right) {
+        // i: nums1 分割线右边的第一个元素下标 (即 nums1 左边分得 i 个)
+        int i = left + (right - left) / 2;
+        // j: nums2 分割线右边的第一个元素下标 (即 nums2 左边分得 j 个)
+        int j = totalLeft - i;
+
+        // 处理边界值：如果分割线在最左/最右，用无穷值代替
+        int nums1LeftMax = (i == 0) ? INT_MIN : nums1[i - 1];
+        int nums1RightMin = (i == m) ? INT_MAX : nums1[i];
+        int nums2LeftMax = (j == 0) ? INT_MIN : nums2[j - 1];
+        int nums2RightMin = (j == n) ? INT_MAX : nums2[j];
+
+        // 3. 交叉判断
+        if (nums1LeftMax > nums2RightMin) {
+            // A左边太大 -> i 往左移
+            right = i - 1;
+        } else if (nums2LeftMax > nums1RightMin) {
+            // B左边太大 (A拿少了) -> i 往右移
+            left = i + 1;
+        } else {
+            // 4. 完美分割！计算中位数
+
+            // 如果总长度是奇数，中位数就是左半边的最大值
+            if ((m + n) % 2 == 1) {
+                return max(nums1LeftMax, nums2LeftMax);
+            }
+            // 如果总长度是偶数，中位数是 (左大 + 右小) / 2
+            else {
+                return (max(nums1LeftMax, nums2LeftMax) + min(nums1RightMin, nums2RightMin)) / 2.0;
+            }
         }
     }
     return 0.0;
@@ -376,3 +473,6 @@ $$
 > 为什么奇数时返回 `max(L1, L2)`？
 
 奇数时，中位数为整体左边最大值 整体左边最大值就是nums1左边最大值和nums2左边做大值的最大值。
+
+# 双指针做法
+

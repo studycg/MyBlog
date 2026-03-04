@@ -16,6 +16,30 @@
 
 **原子操作**意味着这个操作一旦开始，就一定执行完，中间**不会被任何其他线程中断**。
 
+| 原子类型名称    | 对应的内置类型名称 |
+| --------------- | ------------------ |
+| atomic_bool     | bool               |
+| atomic_char     | char               |
+| atomic_schar    | signed char        |
+| atomic_uchar    | unsigned char      |
+| atomic_int      | int                |
+| atomic_uint     | unsigned int       |
+| atomic_short    | short              |
+| atomic_ushort   | unsigned short     |
+| atomic_long     | long               |
+| atomic_ulong    | unsigned long      |
+| atomic_llong    | long long          |
+| atomic_ullong   | unsigned long long |
+| atomic_char16_t | char16_t           |
+| atomic_char32_t | char32_t           |
+| atomic_wchar_t  | wchar_tX`          |
+
+**注意：** 需要用大括号对原子类型的变量进行初始化。
+
+程序员不需要对原子类型进行加锁解锁操作，线程能够对原子类型变量互斥访问。
+
+**也可以使用原子操作模板类定义出任意原子类型，如下例**
+
 ~~~c++
 #include <iostream>
 #include <thread>
@@ -43,6 +67,12 @@ int main() {
     return 0;
 }
 ~~~
+
+- 原子类型通常属于“资源类型”数据，多个线程只能访问单个原子类型的拷贝，因此在C++11中，原子类型只能从其模板参数中进行构造，不允许原子类型进行拷贝构造、移动构造以及operator=等
+- 为了防止意外，标准库已经将atomic模板类中的拷贝构造、移动构造、operator=默认删除掉了
+- 原子类型不仅仅支持原子的++操作，还支持原子的--、加一个值、减一个值、与、或、异或操作
+
+
 
 ## CAS指令
 
@@ -83,7 +113,7 @@ if (done->exchange(true) == false)
 
 # 内存序
 
-## 背景
+## 内存序背景
 
 **指令重排**：为了提高效率，编译器和 CPU 会在不改变**单线程**运行结果的前提下，偷偷调整代码的执行顺序。但在多线程环境下，这种“自作聪明”会导致灾难。
 
@@ -110,7 +140,64 @@ void consumer() {
 
 这就是为什么我们需要**内存序**：它不仅要求操作是原子的，还要求操作发生的**顺序**是有保障的。
 
-## 几种内存序
+**再举一个内存序的例子**
+
+```c++
+Singleton* Singleton::getInstance() {
+    if (m_instance == nullptr) {           // 第一次检查
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (m_instance == nullptr) {       // 第二次检查
+            m_instance = new Singleton();  // 关键：致命的 Bug 发生在这里！
+        }
+    }
+    return m_instance;
+}
+```
+
+这是单例模式中，**双重检查锁定的失效**。
+
+但是上面的代码实际上存在一些问题：对于m_instance = new Singleton()这一行。在编译器眼中，这行代码其实由三个步骤组成：
+
+1. **分配内存**：分配足够存放 Singleton 对象的内存
+2. **调用构造函数**：在那块内存上初始化对象
+3. **赋值指针**：将 m_instance 指向那块内存
+
+假设有两个线程 A 和 B：
+
+1. **线程 A** 执行到了重排后的步骤 3（指针赋值完成），但步骤 2（构造函数）还没跑完。
+2. 此时 **线程 B** 调用 getInstance()，它执行到第一次检查 if (m_instance == nullptr)
+3. 由于线程 A 已经完成了步骤 3，m_instance 不为 nullptr
+4. **线程 B 直接返回了 m_instance 并开始使用它**
+5. **结果**：线程 B 正在使用一个**根本没初始化完成**的“半成品”对象，程序随即崩溃。
+
+**此时就需要使用内存屏障**
+
+为了修复这个 Bug，我们需要确保“赋值指针”的操作绝对不能被重排到“构造函数完成”之前。
+
+```c++
+std::atomic<Singleton*> Singleton::m_instance;
+
+Singleton* Singleton::getInstance() {
+    Singleton* tmp = m_instance.load(std::memory_order_acquire); // 获取屏障
+    if (tmp == nullptr) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        tmp = m_instance.load(std::memory_order_relaxed);
+        if (tmp == nullptr) {
+            tmp = new Singleton();
+            // 释放屏障：确保上面的 new（构造函数）完成后，才执行 store
+            m_instance.store(tmp, std::memory_order_release);
+        }
+    }
+    return tmp;
+}
+```
+
+- **release 屏障**：保证了构造函数的“写”操作，一定在 m_instance 写入之前完成
+- **acquire 屏障**：保证了后续对单例对象成员的“读”操作，一定在 load 成功之后开始（如果不是这样子，可能程序会先执行tmp == nullptr，导致异常错误）
+
+**为什么要内存屏障？** 因为没有它，你的代码顺序在多核 CPU 面前只是“建议”，不是“命令”
+
+## 几种内存屏障
 
 **`memory_order_relaxed` (最松散)**
 

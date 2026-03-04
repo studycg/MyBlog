@@ -16,6 +16,8 @@ fast：探路寻找非零数
 
 非0永远只会和0交换，不会跳过另一个非0元素。
 
+slow++很妙别忘了
+
 ```c++
 void moveZeroes(vector<int>& nums) {
     // slow 记录【下一个非零元素】该放的位置
