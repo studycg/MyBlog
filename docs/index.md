@@ -15,9 +15,9 @@ hero:
   #   src: /logo.png # 这里之后建议换成一张炫酷的 3D 线框图
   #   alt: Logo
 
-  image:
-    src: /logo2.png
-    alt: Logo
+  # image:
+  #   src: /logo2.png
+  #   alt: Logo
   
   actions:
     - theme: brand

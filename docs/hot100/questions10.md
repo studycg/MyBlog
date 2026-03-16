@@ -1,6 +1,6 @@
 > [!NOTE]
 >
-> 回溯
+> ​         回溯
 
 # 常见回溯模板
 
@@ -441,6 +441,8 @@ void backtracking(vector<int>& candidates, int target, int sum, int startIndex) 
 # 括号生成
 
 ![image-20260222172000341](./assets/image-20260222172000341.png)
+
+注意这里是`left<n`和`right<left`不是`<=`因为要在`size==2*n`时判断
 
 ```c++
 vector<string> generateParenthesis(int n) {

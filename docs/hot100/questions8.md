@@ -688,6 +688,39 @@ void flatten(TreeNode* root) {
 ![image-20260220002255150](./assets/image-20260220002255150.png)
 
 ```c++
+class Solution {
+    public:
+    unordered_map<int, int> hash_map;
+
+    TreeNode* build(vector<int>& preorder, int prestart, int preend,
+                    vector<int>& inorder, int instart, int inend) {
+        if (prestart > preend) return nullptr;
+
+        int rootval = preorder[prestart];
+        int inrootindex = hash_map[rootval];
+        TreeNode* root = new TreeNode(rootval);
+
+        int leftsize = inrootindex - instart;
+
+
+        root->left = build(preorder, prestart + 1, prestart + leftsize, inorder, instart, inrootindex - 1);
+        root->right = build(preorder, prestart + leftsize + 1, preend, inorder, inrootindex + 1, inend);
+
+
+        return root;
+
+    }
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        int n = preorder.size();
+        for (int i = 0; i < n; i++) {
+            hash_map[inorder[i]] = i;
+        }
+        return build(preorder, 0, n - 1, inorder, 0, n - 1);
+    }
+};
+```
+
+```c++
 // 这里的 map 用来快速查找 inorder 中的根节点位置
 unordered_map<int, int> indexMap;
 

@@ -37,9 +37,13 @@ int lengthOfLongestSubstring(string s) {
 }
 ```
 
-注意这里是`dict[ch]!=-1`而不是`dict[s[left]!=-1`
+变长滑动窗口
 
-注意`left = max(left, dict[ch]+1)`
+`left = max(left, dict[ch]+1)`：
+
+`max`如果上一次出现的在滑动窗口之外，那么无需更新left。
+
+`+1`防止让窗口包含两个相同的字符，所以必须移动到`+1`。
 
 # 找到字符串中所有字母异位词
 

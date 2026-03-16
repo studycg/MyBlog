@@ -121,86 +121,119 @@ public:
 >
 > 这个`shared_ptr`不是线程安全的
 
-## 线程安全shared_ptr
+## 线程安全shared_ptr/使用atomic
 
 ~~~c++
-#include <iostream>
 #include <atomic>
 
-template <typename T>
-class SharedPtr {
+template<typename T>
+class SharedPtr
+{
 private:
-    T* m_ptr;
-    std::atomic<int>* m_count; // 指向原子变量的指针，用于多线程共享计数
 
-    // 内部释放逻辑：原子自减并检查
-    void release() {
-        if (m_ptr && m_count) {
-            // fetch_sub 返回减 1 之前的值
-            if (m_count->fetch_sub(1, std::memory_order_acq_rel) == 1) {
-                delete m_ptr;
-                delete m_count;
-                std::cout << "Resource deleted.\n";
-            }
-        }
-    }
+    T* ptr;
+    std::atomic<int>* ref_cnt;
 
 public:
-    // 构造函数
-    explicit SharedPtr(T* ptr = nullptr) 
-        : m_ptr(ptr), m_count(ptr ? new std::atomic<int>(1) : nullptr) {}
 
-    // 析构函数
-    ~SharedPtr() { release(); }
-
-    // --- 拷贝语义 ---
-
-    SharedPtr(const SharedPtr& other) : m_ptr(other.m_ptr), m_count(other.m_count) {
-        if (m_count) {
-            m_count->fetch_add(1, std::memory_order_relaxed);
-        }
+    // 构造
+    explicit SharedPtr(T* p = nullptr)
+        : ptr(p)
+    {
+        if (p)
+            ref_cnt = new std::atomic<int>(1);
+        else
+            ref_cnt = nullptr;
     }
 
-    SharedPtr& operator=(const SharedPtr& other) {
-        if (this != &other) {
-            release(); // 辞旧
-            m_ptr = other.m_ptr;
-            m_count = other.m_count;
-            if (m_count) {
-                m_count->fetch_add(1, std::memory_order_relaxed); // 迎新
+    // 拷贝构造
+    SharedPtr(const SharedPtr& other)
+    {
+        ptr = other.ptr;
+        ref_cnt = other.ref_cnt;
+
+        if (ref_cnt)
+            ref_cnt->fetch_add(1);
+    }
+
+    // 拷贝赋值
+    SharedPtr& operator=(const SharedPtr& other)
+    {
+        if (this == &other)
+            return *this;
+
+        release();
+
+        ptr = other.ptr;
+        ref_cnt = other.ref_cnt;
+
+        if (ref_cnt)
+            ref_cnt->fetch_add(1);
+
+        return *this;
+    }
+
+    // 移动构造
+    SharedPtr(SharedPtr&& other) noexcept
+    {
+        ptr = other.ptr;
+        ref_cnt = other.ref_cnt;
+
+        other.ptr = nullptr;
+        other.ref_cnt = nullptr;
+    }
+
+    // 移动赋值
+    SharedPtr& operator=(SharedPtr&& other) noexcept
+    {
+        if (this == &other)
+            return *this;
+
+        release();
+
+        ptr = other.ptr;
+        ref_cnt = other.ref_cnt;
+
+        other.ptr = nullptr;
+        other.ref_cnt = nullptr;
+
+        return *this;
+    }
+
+    // 析构
+    ~SharedPtr()
+    {
+        release();
+    }
+
+    T& operator*()
+    {
+        return *ptr;
+    }
+
+    T* operator->()
+    {
+        return ptr;
+    }
+
+    int use_count() const
+    {
+        return ref_cnt ? ref_cnt->load() : 0;
+    }
+
+private:
+
+    void release()
+    {
+        if (ref_cnt)
+        {
+            if (ref_cnt->fetch_sub(1) == 1)
+            {
+                delete ptr;
+                delete ref_cnt;
             }
         }
-        return *this;
     }
-
-    // --- 移动语义 ---
-
-    SharedPtr(SharedPtr&& other) noexcept 
-        : m_ptr(other.m_ptr), m_count(other.m_count) {
-        other.m_ptr = nullptr;
-        other.m_count = nullptr;
-    }
-
-    SharedPtr& operator=(SharedPtr&& other) noexcept {
-        if (this != &other) {
-            release();
-            m_ptr = other.m_ptr;
-            m_count = other.m_count;
-            other.m_ptr = nullptr;
-            other.m_count = nullptr;
-        }
-        return *this;
-    }
-
-    // --- 工具函数 ---
-
-    int use_count() const {
-        return m_count ? m_count->load(std::memory_order_relaxed) : 0;
-    }
-
-    T& operator*() const { return *m_ptr; }
-    T* operator->() const { return m_ptr; }
-    explicit operator bool() const { return m_ptr != nullptr; }
 };
 ~~~
 
@@ -209,18 +242,12 @@ public:
 - **性能**：`atomic` 是无锁编程的基础，通过 CPU 的 `LOCK XADD` 指令实现，比互斥锁（涉及内核上下文切换）快得多。
 - **死锁风险**：引用计数逻辑简单，不涉及复杂的临界区，用 `mutex` 是大材小用且增加死锁可能。
 
-### `memory_order` 是什么？
-
-在上面的代码中我使用了 `std::memory_order_acq_rel`。
-
-- **简单回答**：这是为了保证多核 CPU 下内存的可见性。当一个线程减到 0 准备 `delete` 时，必须确保其他线程之前对该内存的所有写操作都已同步完成，防止出现“对象还没删完，另一个核已经把它覆盖了”的情况。
-
 ### `release()` 中的自减判断为什么是 `== 1`？
 
 - `fetch_sub(1)` 返回的是**减法前**的值。
 - 如果返回 `1`，说明减完之后变成了 `0`。这是最后一个持有者，应当执行删除。
 
-## mutex实现线程安全
+## mutex实现线程安全（优先记这个）
 
 ~~~c++
 #include <iostream>
@@ -315,6 +342,157 @@ public:
 2. **主动指出这在性能上是不优的**，并说明 `std::atomic` 是更工业级的选择。
 3. **补充一点**：即便使用了锁保护 `m_count`，`shared_ptr` 依然无法保护它指向的业务对象（即 `m_ptr` 指向的内存）。
 
+GPT版本
+
+```c++
+#include <mutex>
+
+template<typename T>
+class SharedPtr
+{
+private:
+
+    T* ptr;
+    int* ref_cnt;
+    std::mutex* mtx;
+
+public:
+
+    // 构造
+    explicit SharedPtr(T* p = nullptr)
+        : ptr(p)
+    {
+        if (p)
+        {
+            ref_cnt = new int(1);
+            mtx = new std::mutex();
+        }
+        else
+        {
+            ref_cnt = nullptr;
+            mtx = nullptr;
+        }
+    }
+
+    // 拷贝构造
+    SharedPtr(const SharedPtr& other)
+    {
+        ptr = other.ptr;
+        ref_cnt = other.ref_cnt;
+        mtx = other.mtx;
+
+        if (ref_cnt)
+        {
+            std::unique_lock<std::mutex> lock(*mtx);
+            ++(*ref_cnt);
+        }
+    }
+
+    // 拷贝赋值
+    SharedPtr& operator=(const SharedPtr& other)
+    {
+        if (this == &other)
+            return *this;
+
+        release();
+
+        ptr = other.ptr;
+        ref_cnt = other.ref_cnt;
+        mtx = other.mtx;
+
+        if (ref_cnt)
+        {
+            std::unique_lock<std::mutex> lock(*mtx);
+            ++(*ref_cnt);
+        }
+
+        return *this;
+    }
+
+    // 移动构造
+    SharedPtr(SharedPtr&& other) noexcept
+    {
+        ptr = other.ptr;
+        ref_cnt = other.ref_cnt;
+        mtx = other.mtx;
+
+        other.ptr = nullptr;
+        other.ref_cnt = nullptr;
+        other.mtx = nullptr;
+    }
+
+    // 移动赋值
+    SharedPtr& operator=(SharedPtr&& other) noexcept
+    {
+        if (this == &other)
+            return *this;
+
+        release();
+
+        ptr = other.ptr;
+        ref_cnt = other.ref_cnt;
+        mtx = other.mtx;
+
+        other.ptr = nullptr;
+        other.ref_cnt = nullptr;
+        other.mtx = nullptr;
+
+        return *this;
+    }
+
+    // 析构
+    ~SharedPtr()
+    {
+        release();
+    }
+
+    T& operator*()
+    {
+        return *ptr;
+    }
+
+    T* operator->()
+    {
+        return ptr;
+    }
+
+    int use_count()
+    {
+        if (!ref_cnt)
+            return 0;
+
+        std::unique_lock<std::mutex> lock(*mtx);
+        return *ref_cnt;
+    }
+
+private:
+
+    void release()
+    {
+        if (ref_cnt)
+        {
+            bool destroy = false;
+
+            {
+                std::unique_lock<std::mutex> lock(*mtx);
+
+                --(*ref_cnt);
+
+                if (*ref_cnt == 0)
+                    destroy = true;
+            }
+
+            if (destroy)
+            {
+                delete ptr;
+                delete ref_cnt;
+                delete mtx;
+            }
+        }
+    }
+};
+```
+
 # 手撕线程池
 
 ~~~c++
@@ -373,11 +551,3 @@ private:
     bool stop;
 };
 ~~~
-
-
-
-
-
-
-
-# 手撕单例

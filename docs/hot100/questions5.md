@@ -27,7 +27,11 @@ int maxSubArray(vector<int>& nums) {
 }
 ```
 
-在这个算法中 pre会不断收集和为正的子序列 并将这个子序列的值更新到Maxans 当pre变负时 下一个正的子序列会以下一个正的数字为开头 这样在一堆负数中隔离出了各个和为正的子序列 并不断比较选出它们的最大值 。
+`pre`会不断收集和为正的子序列 并将这个子序列的值更新到`Maxans` 
+
+当`pre`变负时 下一个正的子序列会以下一个正的数字为开头：这样在一堆负数中隔离出了各个和为正的子序列 并不断比较选出它们的最大值 。
+
+若是动态规划模板：
 
 如果 `dp[i-1] > 0`（前面是正资产），那就接上它：`nums[i] + dp[i-1]`。
 
@@ -80,6 +84,43 @@ vector<vector<int>> merge(vector<vector<int>>& intervals) {
     }
 
     return merged;
+}
+```
+
+```c++
+vector<vector<int>> func(vector<vector<int>>& intervals) {
+
+    if(intervals.empty()) return {};
+
+    vector<vector<int>> ans;
+
+    auto lmd = [](const vector<int>& a, const vector<int>& b) {
+        return a[0] < b[0];
+    };
+
+    sort(intervals.begin(), intervals.end(), lmd);
+
+    int left = intervals[0][0];
+    int right = intervals[0][1];
+
+    for (int i = 1; i < intervals.size(); i++) {
+
+        int nextleft = intervals[i][0];
+        int nextright = intervals[i][1];
+
+        if (right >= nextleft) {       // 有重叠
+            right = max(right, nextright);
+        }
+        else {                         // 无重叠
+            ans.push_back({left, right});
+            left = nextleft;
+            right = nextright;
+        }
+    }
+
+    ans.push_back({left, right});
+
+    return ans;
 }
 ```
 
@@ -221,27 +262,23 @@ int firstMissingPositive(vector<int>& nums) {
 }
 ```
 
-但是如果直接用unordered_map
+但是如果直接用`unordered_set`
 
 ```c++
-int firstMissingPositive(vector<int>& nums) {
-    unordered_map<int, int> occur;
-
-    for (auto num : nums) {
-        occur[num]++;
+int func(vector<int>& nums) {
+    unordered_set<int> hash_set;
+    for (int num : nums) {
+        if (num > 0)
+            hash_set.insert(num);
     }
-
-    int currnum = 1;
-    while (true) {
-        if (occur.contains(currnum)) {
-            currnum++;
-        }
-        else {
-            break;
+    int n = nums.size();
+    for (int i = 1; i <= n; i++) {
+        if (!hash_set.contains(i)) {
+            return i;
         }
     }
-    return currnum;
+    return n + 1;
 }
 ```
 
-很简单但是耗时很久
+很简单但是耗时很久 

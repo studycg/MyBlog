@@ -2,6 +2,24 @@
 
 它就像一个饿极了的人，等不到下指令（调用 `getInstance`），在程序刚启动、还没进入 `main` 函数之前，它就已经把实例创建好了。
 
+```c++
+class Singleton
+{
+private:
+    static Singleton instance;
+
+    Singleton() {}
+
+public:
+    static Singleton& GetInstance()
+    {
+        return instance;
+    }
+};
+
+Singleton Singleton::instance;
+```
+
 ~~~c++
 #include <iostream>
 
@@ -81,7 +99,7 @@ int main() {
 
 **链接阶段：** 报错。链接器去寻找这块内存地址时，发现根本没有人定义（分配）它，于是它就“失联”了。
 
-## 不能再main中初始化
+## 不能在main中初始化
 
 静态变量必须在**全局作用域**（或者命名空间作用域）进行定义。如果你尝试在 `main` 函数内部写 `Singleton Singleton::instance;`，编译器会报错，因为它不符合 C++ 的语法规范——静态成员变量不属于任何一个函数，它属于类本身。
 
@@ -139,7 +157,78 @@ private:
 
 # 懒汉模式
 
-## 非线程安全
+## 最基础的懒汉模式
+
+```c++
+class Singleton
+{
+private:
+    static Singleton* instance;
+
+    Singleton() {}  // 构造函数私有
+
+public:
+    static Singleton* GetInstance()
+    {
+        if (instance == nullptr)
+        {
+            instance = new Singleton();
+        }
+        return instance;
+    }
+};
+
+Singleton* Singleton::instance = nullptr;
+```
+
+使用
+
+```c++
+Singleton* s = Singleton::GetInstance();
+```
+
+线程不安全，如果两个线程同时进入
+
+```c++
+if(instance == nullptr)
+```
+
+可能创建两个对象
+
+## 加互斥锁的线程安全
+
+```c++
+#include <mutex>
+
+class Singleton
+{
+private:
+    static Singleton* instance;
+    static std::mutex mtx;
+
+    Singleton() {}
+
+public:
+    static Singleton* GetInstance()
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+
+        if (instance == nullptr)
+        {
+            instance = new Singleton();
+        }
+
+        return instance;
+    }
+};
+
+Singleton* Singleton::instance = nullptr;
+std::mutex Singleton::mtx;
+```
+
+每次调用都可能加锁，导致性能下降。
+
+## 加锁懒汉会导致性能下降
 
 ~~~c++
 class LazySingleton {
@@ -263,6 +352,47 @@ private:
 };
 
 ~~~
+
+```c++
+static Singleton instance;
+```
+
+**为什么不会内存泄漏？**
+
+函数内静态对象
+
+```c++
+程序启动 -> 第一次调用GetInstance()创建 -> 程序结束析构
+```
+
+编译器会在程序结束时自动调用析构函数，所以不需要delete。
+
+**为什么线程安全？**
+
+**局部静态变量初始化是线程安全的**
+
+函数内静态变量不是程序启动就创建的，而是第一次执行到这个代码时创建，所以依然是懒加载。
+
+这是C++标准规定的
+
+如果单例写成这样
+
+```c++
+class Singleton
+{
+public:
+    static Singleton& GetInstance()
+    {
+        static Singleton* instance = new Singleton();
+        return *instance;
+    }
+
+private:
+    Singleton() {}
+};
+```
+
+最大的问题是对象不会析构
 
 ## 批评
 

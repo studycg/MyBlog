@@ -802,41 +802,27 @@ ListNode* reverseKGroup(ListNode* head, int k) {
 }
 ```
 
+注意这里是k-1 或者end从prev开始 或者从`prev->next`开始k-1
+
 ```c++
 ListNode* reverseKGroup(ListNode* head, int k) {
-
-    ListNode dummy(0);
-    dummy.next = head;
-
-    ListNode* prev = &dummy;
-
-    while (true) {
-
-        // 1️⃣ 找k个节点
-        ListNode* end = prev;
-        for (int i = 0; i < k && end; i++)
-            end = end->next;
-
-        if (!end) break;
-
-        // 2️⃣ 记录边界
-        ListNode* start = prev->next;
-        ListNode* nextGroup = end->next;
-
-        // 3️⃣ 断开
-        end->next = nullptr;
-
-        // 4️⃣ 翻转
-        prev->next = reverse(start);
-
-        // 5️⃣ 接回
-        start->next = nextGroup;
-
-        // 6️⃣ 移动prev
-        prev = start;
-    }
-
-    return dummy.next;
+		ListNode* dummy = new ListNode(-1);
+        dummy->next = head;
+		ListNode* prev = dummy;
+		while (true) {
+			ListNode* start = prev->next;
+			ListNode* end = start;
+			for (int i = 0; i < k-1; i++) {
+				end = end->next;
+				if (!end) return dummy->next;
+			}
+			ListNode* nextgroup = end->next;
+			end->next = nullptr;
+			prev->next = reverse(start);
+			start->next = nextgroup;
+			prev = start;
+		}
+		return dummy->next;
 }
 ```
 
