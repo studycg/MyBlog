@@ -6,7 +6,7 @@
 
 ![image-20260219014310570](./assets/image-20260219014310570.png)
 
-基于堆的做法
+基于大根堆的做法
 
 ```c++
 int findKthLargest(vector<int>& nums, int k) {
@@ -18,6 +18,22 @@ int findKthLargest(vector<int>& nums, int k) {
     while (cnt--) {
         pq.pop();
 
+    }
+    return pq.top();
+}
+```
+
+基于小根堆的做法
+
+```c++
+int findKthLargest(vector<int>& nums, int k) {
+    auto lmd = [](int a, int b) {return a > b; };
+    priority_queue<int, vector<int>, decltype(lmd)> pq;
+    for (auto num : nums) {
+        pq.push(num);
+        if (pq.size() > k) {
+            pq.pop();
+        }
     }
     return pq.top();
 }

@@ -212,6 +212,92 @@ class Solution {
 
 **搜索 Target**：我们需要判断区间范围，所以和 `nums[left]` 比（确定左区间是否有序）或者和 `nums[right]` 比（确定右区间是否有序）都可以。通常习惯和 `left` 比，方便写 `nums[left] <= target < nums[mid]` 这种范围判断。
 
+### 我的另一种思路
+
+```c++
+int search(vector<int>& nums, int target) {
+	int left = 0;
+	int right = nums.size() - 1;
+	int n = nums.size() - 1;
+	while (left <= right) {
+		int mid = (left + right) / 2;
+		if (nums[mid] == target) {
+			return mid;
+		}
+		if (target > nums[n]) {
+			if (nums[mid] > nums[n] && nums[mid] > target) {
+				right = mid - 1;
+			}
+			else if (nums[mid] > nums[n] && nums[mid] < target)
+			{
+				left = mid + 1;
+			}
+			else {
+				right = mid - 1;
+			}
+		}
+		else {
+			if (nums[mid] < nums[n] && nums[mid] < target) {
+				left = mid + 1;
+			}
+			else if (nums[mid] < nums[n] && nums[mid] > target)
+			{
+				right = mid - 1;
+			}
+			else {
+				left = mid + 1;
+			}
+		}
+
+	}
+	return -1;
+}
+```
+
+啰嗦了一点 但是也还行吧
+
+优化之后
+
+```c++
+int search(vector<int>& nums, int target) {
+    int left = 0;
+    int right = nums.size() - 1;
+    int n = nums.size() - 1;
+
+    while (left <= right) {
+        int mid = (left + right) / 2;
+
+        if (nums[mid] == target) {
+            return mid;
+        }
+
+        bool targetLeft = target > nums[n];
+        bool midLeft = nums[mid] > nums[n];
+
+        // ✅ 在同一段：正常二分
+        if (targetLeft == midLeft) {
+            if (nums[mid] > target) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        }
+        // ❗ 不在同一段：直接跳
+        else {
+            if (targetLeft) {
+                // target 在左段，mid 在右段
+                right = mid - 1;
+            } else {
+                // target 在右段，mid 在左段
+                left = mid + 1;
+            }
+        }
+    }
+
+    return -1;
+}
+```
+
 # 寻找旋转排序数组中的最小值
 
 ![image-20260209202114081](./assets/image-20260209202114081.png)
@@ -262,6 +348,28 @@ class Solution {
 
 - 之前的题目（找 target），我们有可能在 `mid` 就找到了并返回，所以要一直缩到空为止。
 - 这道题我们是要**逼近**到一个点。当 `left == right` 时，我们就锁定了唯一的嫌疑人，此时不需要再进循环判断了，直接输出它即可。
+
+### 如果用left<=right的话
+
+```c++
+int findMin(vector<int> nums) {
+    int left = 0;
+    int right = nums.size() - 1;
+    int rightval = nums[right];
+    while (left <= right) {
+        int mid = (left + right) / 2;			
+        if (nums[mid] > rightval) {
+            left = mid + 1;
+        }
+        else {
+            right = mid - 1;
+        }
+    }
+    return nums[left];
+}
+```
+
+这样也可以
 
 # 寻找两个正序数组中的中位数[Hard]
 
@@ -453,7 +561,7 @@ $$
 右边 k 个
 ```
 
-中位数 = 左边最后一个
+中位数 = 左边最后一个`max(L1,L2)`
 
 情况 2：`m+n` 是偶数
 

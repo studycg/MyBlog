@@ -168,7 +168,7 @@ int longestCommonSubsequence(string text1, string text2) {
 - 删掉后，`word1` 只剩下 `i-1` 个字符，而 `word2` 还需要 `j` 个字符来对齐。
 - 成本：`dp[i-1][j] + 1`
 
-**插入：在 `word1` 末尾加一个字符使其等于 `word2[j-1]`。
+**插入**：在 `word1` 末尾加一个字符使其等于 `word2[j-1]`。
 
 - 此时 `word2` 的最后一位对齐了，剩下的问题变成 `word1` 依然有 `i` 个字符，而 `word2` 只剩下 `j-1` 个。
 - 成本：`dp[i][j-1] + 1`

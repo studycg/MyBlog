@@ -43,7 +43,7 @@ export default defineConfig({
       // 我们可以按你的技术栈把知识库分为几大块
       { text: 'C++基础', link: '/cpp/intro' },
       { text: 'C++进阶', link: '/morecpp/morecpp_01' },
-      { text: 'C++多线程', link: '/cpp_multithreading/01basement' },
+      { text: 'C++多线程', link: '/cpp_multithreading/basement' },
       { text: '408复习', link: '/408_review/CN_01' },
       { text: 'Hot100', link: '/hot100/questions1' },
       { text: '计算机图形学', link: '/graphics/games101_1' },
@@ -98,8 +98,9 @@ export default defineConfig({
           text: '面试',
           collapsed: false,
           items: [
-            { text: '一些手撕', link: '/interview/some_byhands' },
-            { text: '单例模式', link: '/interview/singleton' }
+            { text: '简历相关问题', link: '/interview/resume' },
+            { text: '手撕智能指针', link: '/interview/some_byhands' },
+            { text: '单例模式', link: '/interview/singleton' },
           ]
         }
       ],
@@ -115,7 +116,7 @@ export default defineConfig({
             { text: "继承", link: '/morecpp/morecpp_06' },
             { text: '多态', link: '/morecpp/morecpp_07' },
             // { text: 'C++11', link: '/morecpp/morecpp_08' },
-            { text: '异常', link: '/morecpp/morecpp_08/*  */' },
+            { text: '异常', link: '/morecpp/morecpp_08' },
             { text: '智能指针', link: '/morecpp/morecpp_10' },
             { text: '特殊类设计', link: '/morecpp/morecpp_11' },
             { text: 'C++类型转换', link: '/morecpp/morecpp_12' },
@@ -166,18 +167,20 @@ export default defineConfig({
           text: 'C++多线程',
           collapsed: false,
           items: [
-            { text: '基础', link: '/cpp_multithreading/01basement' },
-            { text: '线程同步', link: '/cpp_multithreading/02synchronization' },
-            { text: '异步编程', link: '/cpp_multithreading/04asynchronous' },
-            { text: '条件变量', link: '/cpp_multithreading/05condition_variable' },
-            { text: '原子操作', link: '/cpp_multithreading/06atomic' },
-            { text: '线程池', link: '/cpp_multithreading/08threadpool' }
+            { text: '基础', link: '/cpp_multithreading/basement' },
+            { text: '线程同步', link: '/cpp_multithreading/synchronization' },
+            { text: '条件变量', link: '/cpp_multithreading/condition_variable' },
+            { text: '信号量', link: '/cpp_multithreading/semaphore' }, 
+            { text: '原子操作', link: '/cpp_multithreading/atomic' },
+            { text: '协程', link: '/cpp_multithreading/coroutine' },
+            { text: '异步编程', link: '/cpp_multithreading/asynchronous'},
+            { text: '线程池', link: '/cpp_multithreading/threadpool' }
           ]
         }
       ],
       '/graphics/': [
         {
-          text: '计算机图形学',
+          text: '图形学基础GAMES101',
           collapsed: false,
           items: [
             { text: 'Overview', link: '/graphics/games101_1' },
@@ -195,6 +198,16 @@ export default defineConfig({
             { text: 'Ray Tracing2', link: '/graphics/games101_13' },
             { text: 'Ray Tracing3', link: '/graphics/games101_14' },
             { text: 'Ray Tracing4', link: '/graphics/games101_15' }
+          ]
+        },
+        {
+          text:'实时渲染GAMES202',
+          collapsed: false,
+          items: [
+            { text: 'Overview', link: '/graphics/games202_01' },
+            { text: 'Recap of CG basics', link: '/graphics/games202_02' },
+            { text: 'Real-Time Shadows', link: '/graphics/games202_03' },
+            { text: 'Real-Time Shadows2', link: '/graphics/games202_04' },            
           ]
         }
       ],
@@ -236,6 +249,7 @@ export default defineConfig({
       ],
       'unity/': [
         { text: 'Demo回顾', link: '/unity/Summary' },
+        { text: '游戏相关知识', link: '/unity/OtherKnowledge' },
         { text: '玩家移动', link: '/unity/Player_Movement' },
         { text: '玩家攻击', link: '/unity/Player_Combat' },
         { text: '玩家射击', link: '/unity/Player_Bow' },

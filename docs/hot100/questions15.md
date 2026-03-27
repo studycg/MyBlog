@@ -2,6 +2,241 @@
 >
 > 动态规划
 
+# n+1与n
+
+**dp[i] 表示“前 i 个元素” → 用 n+1**
+**dp[i] 表示“第 i 个位置结尾” → 用 n**
+
+前缀型DP用n+1：$dp[i]=前i个元素([0,i−1])的状态$
+
+比如：单词拆分 背包问题
+
+为什么必须有n+1？因为必须表示**什么都没有**的状态
+
+位置型DP用n：$dp[i]=以i结尾的状态$
+
+此时i是真实下标
+
+如：最长递增子序列、最大子数组和
+
+| 类型   | dp含义      | 是否需要 dp[0] 表示空 | 数组大小 |
+| ------ | ----------- | --------------------- | -------- |
+| 前缀型 | 前 i 个元素 | ✅ 需要                | n+1      |
+| 位置型 | 以 i 结尾   | ❌ 不需要              | n        |
+
+# 背包问题思路
+
+## 0/1背包
+
+**每个物体最多用一次**
+
+$dp[i][j]=前i个物品，在容量j下的最大价值$
+
+对于第i个物体：
+
+- 不选：$dp[i][j]=dp[i−1][j]$
+- 选：$dp[i][j]=dp[i−1][j−w[i−1]]+v[i−1]$
+- 合计：$dp[i][j]=max(dp[i−1][j], dp[i−1][j−w[i−1]]+v[i−1])$
+
+```c++
+vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
+
+for (int i = 1; i <= n; i++) {
+    for (int j = 0; j <= W; j++) {
+        if (j < w[i - 1]) {
+            dp[i][j] = dp[i - 1][j];
+        } else {
+            dp[i][j] = max(dp[i - 1][j],dp[i - 1][j - w[i - 1]] + v[i - 1]);
+        }
+    }
+}
+```
+
+$dp[i][j]只依赖dp[i−1][...]$
+
+所以可以**只保留一行**
+
+```c++
+for (int i = 0; i < n; i++) {          // 物品
+    for (int j = 0; j <= W; j++) {     // 全部容量
+        if (j >= w[i]) {               // 判断能不能放
+            dp[j] = max(dp[j], dp[j - w[i]] + v[i]);
+        }
+    }
+}
+```
+
+但是这个写法是错的，因为在二维中用的是`dp[i-1]`但是在一维优化中此时前面的已经被更新了，不再是`dp[i-1]`这一层了，所以要倒着来。
+
+```c++
+for (int i = 0; i < n; i++) {          
+    for (int j = W; j >= 0; j--) {     // 倒序！！
+        if (j >= w[i]) {
+            dp[j] = max(dp[j], dp[j - w[i]] + v[i]);
+        }
+    }
+}
+```
+
+倒序遍历是防止一个物体被用多次
+
+如果连if都不想写 那也可以直接写为
+
+```c++
+for (int i = 0; i < n; i++) {
+    for (int j = W; j >= w[i]; j--) {
+        dp[j] = max(dp[j], dp[j - w[i]] + v[i]);
+    }
+}
+```
+
+## 完全背包
+
+**每个物体可以无限用**
+
+$dp[i][j]=前i个物品，在容量j下的最大价值$
+
+对于第i个物品：
+
+- 不选：$dp[i][j]=dp[i−1][j]$
+- 选：$dp[i][j]=dp[i][j−w[i−1]]+v[i−1]$
+- 合计：$dp[i][j]=max(dp[i−1][j], dp[i][j−w[i−1]]+v[i−1])$
+- 为什么选的话和01背包不一样了？
+  - 因为每个物品可以无限选，选了第i个物品之后，减去它的重量，剩余重量为`j-w[i-1]`。剩下的重量还可能由这个物品组成。
+
+```c++
+vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
+
+for (int i = 1; i <= n; i++) {
+    for (int j = 0; j <= W; j++) {
+        if (j < w[i - 1]) {
+            dp[i][j] = dp[i - 1][j];
+        } else {
+            dp[i][j] = max(dp[i - 1][j],dp[i][j - w[i - 1]] + v[i - 1]);
+        }
+    }
+}
+```
+
+```c++
+for (int i = 0; i < n; i++) {
+    for (int j = 0; j <= W; j++) {   // 正序
+        if (j >= w[i]) {
+            dp[j] = max(dp[j], dp[j - w[i]] + v[i]);
+        }
+    }
+}
+```
+
+## 多重背包
+
+**每个物体有固定的次数 介于01和完全之间**
+
+有 n 种物品
+
+每种物品：
+
+- 重量 `w[i]`
+- 价值 `v[i]`
+- **数量限制 `k[i]`**
+
+$dp[i][j]=前i种物品，在容量j下的最大价值$
+
+对于第i种物品：
+
+- 不选：$dp[i][j]=dp[i−1][j]、$
+- 选k次：$dp[i][j]=dp[i−1][j−k⋅w[i]]+k⋅v[i]$
+- 合计：$ dp[i][j] = \max_{0 \le k \le k[i]} \left( dp[i-1][j - k w[i]] + k v[i] \right) $
+
+```c++
+for (i)
+    for (j)
+        for (k = 0 → k[i])
+```
+
+这样时间复杂度直接$O(n⋅W⋅k)$
+
+使用二进制拆分优化
+
+```c++
+vector<int> weights, values;
+
+for (int i = 0; i < n; i++) {
+    int w = weight[i], v = value[i], k = count[i];
+
+    for (int c = 1; c <= k; c <<= 1) {
+        weights.push_back(c * w);
+        values.push_back(c * v);
+        k -= c;
+    }
+
+    if (k > 0) {
+        weights.push_back(k * w);
+        values.push_back(k * v);
+    }
+}
+```
+
+然后直接使用01背包
+
+```c++
+for (int i = 0; i < weights.size(); i++) {
+    for (int j = W; j >= weights[i]; j--) {
+        dp[j] = max(dp[j], dp[j - weights[i]] + values[i]);
+    }
+}
+```
+
+## 分组背包
+
+有若干组物品
+
+每一组里有多个物品
+
+**每组最多选一个**
+
+$dp[i][j]=前i组，在容量j下的最大价值$
+
+对于第i组：
+
+- 不选这一组的任何物品：$dp[i][j]=dp[i−1][j]$。
+- 选这一组的某个物品k：$dp[i][j]=dp[i−1][j−wi,k]+vi,k$
+- 合并：$dp[i][j]=max(dp[i−1][j], kmax(dp[i−1][j−wi,k]+vi,k))$
+
+```c++
+for (int i = 1; i <= group_num; i++) {
+    for (int j = 0; j <= W; j++) {
+        dp[i][j] = dp[i-1][j];  // 不选
+
+        for (auto& item : group[i]) {
+            int w = item.weight;
+            int v = item.value;
+
+            if (j >= w) {
+                dp[i][j] = max(dp[i][j],dp[i-1][j - w] + v);
+            }
+        }
+    }
+}
+```
+
+状态压缩后：
+
+```c++
+for (int i = 0; i < group_num; i++) {
+    for (int j = W; j >= 0; j--) {   // 倒序！！
+        for (auto& item : group[i]) {
+            int w = item.weight;
+            int v = item.value;
+
+            if (j >= w) {
+                dp[j] = max(dp[j], dp[j - w] + v);
+            }
+        }
+    }
+}
+```
+
 # 动态规划
 
 **把复杂问题拆成子问题，通过保存子问题结果来避免重复计算**
@@ -76,31 +311,37 @@ DP 不是一团乱麻，它是有固定套路的：
 - **序列型DP**：最长递增子序列、最长公共子序列。
 - **区间DP**：`dp[l][r]`表示最优解
 
-# 背包问题思路
-
-## 0/1背包
-
-
-
-## 分组背包
-
-
-
-## 完全背包
-
-
-
-## 
-
 # 爬楼梯
 
 **![image-20260209221903160](./assets/image-20260209221903160.png)**
 
+```c++
 dp[i]=dp[i-1]+dp[i-2]
 dp[1]=1
 dp[2]=2
+```
 
 # 杨辉三角
+
+![image-20260322020723789](./assets/image-20260322020723789.png)
+
+```c++
+vector<vector<int>> generate(int n) {
+    vector<vector<int>> ans;
+
+    for (int i = 0; i < n; i++) {
+        vector<int> curr(i + 1, 1);  // 默认全是1
+
+        for (int j = 1; j < i; j++) {
+            curr[j] = ans[i - 1][j - 1] + ans[i - 1][j];
+        }
+
+        ans.push_back(curr);
+    }
+
+    return ans;
+}
+```
 
 # 打家劫舍
 
@@ -110,7 +351,7 @@ dp[2]=2
 
 ![image-20260218171130714](./assets/image-20260218171130714.png)
 
-dp[i]=组成整数i所需的最少完全平方数个数
+`dp[i]`组成整数`i`所需的最少完全平方数个数
 
 ```c++
 int numSquares(int n) {
@@ -134,9 +375,9 @@ $dp[12]=min(dp[12],dp[8]+1)$
 
 $dp[4]=dp[0]+1=1$
 
-dp12=4+4+4
+$dp[12]=4+4+4$
 
-看起来是j=1到j*j<=i只遍历了一次，但是每个dp元素都经过这样的遍历，所以完全背包的无限次使用隐含在了之前的遍历中。
+看起来是`j=1`到`j*j<=i`只遍历了一次，但是每个dp元素都经过这样的遍历，所以完全背包的无限次使用隐含在了之前的遍历中。
 
 # 零钱兑换
 
@@ -208,6 +449,16 @@ bool wordBreak(string s, vector<string>& wordDict) {
     return dp[s.size()];
 }
 ```
+
+关于`substr`：
+
+如果想要`[a,b]`那么是`s.substr(a,b-a+1)`
+
+此题目中`dp[i]`表示`[0,i-1]`可以被表示
+
+那么`[j,i]`自然是`s.substr(i-1-j+1)`
+
+最后看起来就是`i-j`
 
 # 最长递增子序列
 
@@ -310,6 +561,8 @@ int maxProduct(vector<int>& nums) {
 ![image-20260218203801578](./assets/image-20260218203801578.png)
 
 0/1背包
+
+$dp[i][j]=前i个数，是否可以凑出和j$
 
 ```c++
 bool canPartition(vector<int>& nums) {

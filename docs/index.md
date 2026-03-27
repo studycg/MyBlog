@@ -44,6 +44,10 @@ features:
     details: 个人经历和技能。
     link: /resume
 
+  - title: 🎮 游戏
+    details: 从小到大玩过的游戏。
+    link: /games
+
   - title: ⚙️ 功能测试
     details: 测试vitepress markdown公式显示是否正常。
     link: /test
