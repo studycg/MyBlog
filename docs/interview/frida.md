@@ -233,7 +233,22 @@ pathId = 12345，并且Path ID是唯一的。
 
 **调用路径的缓存**
 
+`pathCache[(parentPathId, funcId)] = newPathId`
 
+```c++
+function getPathId(parentPathId, funcId) {
+    key = (parentPathId, funcId)
+
+    if (key 存在):
+        return 已有 pathId
+    else:
+        newId = 创建新 pathId
+        pathCache[key] = newId
+        return newId
+}
+```
+
+这样做不用再拼字符串、也不用重复构造路径。
 
 | 问题     | 解决     |
 | -------- | -------- |
@@ -242,11 +257,84 @@ pathId = 12345，并且Path ID是唯一的。
 | 路径爆炸 | 用树结构 |
 | 比较复杂 | O(1)     |
 
+## 统计是根据路径的
+
+```c++
+pathStats[pathId] = {
+    count,
+    inclusiveTicks,
+    selfTicks,
+    ...
+}
+```
+
+A → B → C : 100次
+X → B → C : 50次
+
+如果只用funcID，那么哪个路径慢呢？哪个调用链有问题呢？就很难察觉了。
+
+为什么需要路径？区分不同调用链
+
+pathId 本质？路径的唯一整数表示
+
+pathCache？避免重复构造路径
+
+数据结构？本质是 Trie
+
+$O(n \cdot d) \rightarrow O(n)$
+
 # 时间统计
 
+## 总时间（包含时间）
 
+$T_{inc}=t_{exit}−t_{enter}$
 
-# 内存统计
+是函数执行期间的全部时间，包含子函数时间
+
+## 自身时间
+
+$T_{self}=T_{inc}−∑T_{children}$
+
+函数自己真正的干活时间，不包括调用别人。
+
+因为：如果是这样的话
+
+A → B → C
+C = 2ms
+B = 5ms（包含C）
+A = 10ms（包含B）
+
+那么只会看到
+
+A: 10ms
+B: 5ms
+C: 2ms
+
+不知道到底是A慢真的慢还是下面的子函数慢。
+
+# 内存分析
+
+这里的内存是指HealAlloc/VirtualAlloc分配的内存
+
+本质是**动态内存分配的行为统计**
+
+没有源码，只能看到运行时，想知道谁分配了内存只能拦截分配函数。
+
+`HeapAlloc/HeapFree`：new/malloc通常走这里
+
+`VirtualAlloc/VirtualFree`：直接向操作系统申请内存页
+
+当前内存占用：currentMemory
+
+峰值内存：peakMemory=max(currentMemory)
+
+分配次数：allocCount
+
+释放次数：freeCount
+
+总分配量：totalAllocatedBytes
+
+## 申请大小分析
 
 
 

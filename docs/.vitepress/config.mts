@@ -44,6 +44,7 @@ export default defineConfig({
       { text: 'C++基础', link: '/cpp/intro' },
       { text: 'C++进阶', link: '/morecpp/morecpp_01' },
       { text: 'C++多线程', link: '/cpp_multithreading/basement' },
+      // { text: 'C#', link: '/csharp/csharp_00' },
       { text: '408复习', link: '/408_review/CN_01' },
       { text: 'Hot100', link: '/hot100/questions1' },
       { text: '计算机图形学', link: '/graphics/games101_1' },
@@ -101,6 +102,9 @@ export default defineConfig({
             { text: '简历相关问题', link: '/interview/resume' },
             { text: '手撕智能指针', link: '/interview/some_byhands' },
             { text: '单例模式', link: '/interview/singleton' },
+            { text: '性能统计脚本', link : '/interview/frida' },
+            { text: 'Agent', link: '/interview/agent' },
+            { text: '面试被问过的问题', link: '/interview/questions' },
           ]
         }
       ],
@@ -209,6 +213,11 @@ export default defineConfig({
             { text: 'Real-Time Shadows', link: '/graphics/games202_03' },
             { text: 'Real-Time Shadows2', link: '/graphics/games202_04' },            
           ]
+        },
+        {
+          text: '准备面试',
+          collapsed: false,
+          items:[{ text: '回顾', link: '/graphics/summary'}]
         }
       ],
       '/hot100/': [
@@ -233,7 +242,8 @@ export default defineConfig({
             { text: '贪心', link: '/hot100/questions14' },
             { text: '动态规划', link: '/hot100/questions15' },
             { text: '多维动态规划', link: '/hot100/questions16' },
-            { text: '技巧', link: '/hot100/questions17' }          
+            { text: '技巧', link: '/hot100/questions17' },
+            { text: '其它问题', link: '/hot100/questions_relative' }       
           ]
         }
       ],

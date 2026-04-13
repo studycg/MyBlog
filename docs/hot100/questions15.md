@@ -385,6 +385,26 @@ $dp[12]=4+4+4$
 
 这道题也是完全背包问题
 
+使用二维DP：
+
+```c++
+int fucn(vector<int> coins, int amount) {
+	int n = coins.size();
+	vector<vector<int>> dp(n + 1, vector<int>(amount + 1, amount + 1));
+	for (int i = 0; i <= n; i++) {
+		dp[i][0] = 0;
+	}
+	for (int i = 1; i <= n; i++) {
+		int coin = coins[i - 1];
+		for (int j = 0; j <= amount; j++) {
+			dp[i][j] = dp[i - 1][j];
+			if (coin <= j) dp[i][j] = min(dp[i][j], dp[i][j - coin] + 1);
+		}
+	}
+	return dp[n][amount] == amount + 1 ? -1 : dp[n][amount];
+}
+```
+
 dp[i]=组成金额i所需的最少硬币数量
 
 ```c++
@@ -420,6 +440,8 @@ int coinChange(vector<int>& coins, int amount) {
 ![image-20260218182605750](./assets/image-20260218182605750.png)
 
 $dp[i]$的含义：前i个字符是否可以被拆分，也就是$s[0:i−1]$是否可以被字典拆分。
+
+j就是拆分点 从i到j-1
 
 ```c++
 bool wordBreak(string s, vector<string>& wordDict) {
@@ -650,6 +672,16 @@ int prev = (i - dp[i - 1] >= 2) ? dp[i - dp[i - 1] - 2] : 0;
 ```
 
 ## 栈解法
+
+栈顶含义：当前这一段合法括号的左边界的前一个位置
+
+st.top() 永远是“当前合法区间的左边界前一个位置”
+
+即最近一个不能参与匹配的位置
+
+对于例子`(())())`当计算到下标为5的时候 结果是5-(-1)=6正常吗 正常的
+
+因为这道题求的是一个子串长度 这个子串包含的所有括号都是有效的
 
 ```c++
 int longestValidParentheses(string s) {

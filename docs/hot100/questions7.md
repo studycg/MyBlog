@@ -564,6 +564,10 @@ ListNode* removeNthFromEnd(ListNode* head, int n) {
 }
 ```
 
+为什么走n步？slow指针停在删除结点的前一个结点
+
+为什么用dummy？把头节点变为普通结点，防止删除第一个元素逻辑不同。
+
 翻转做法
 
 ```c++
