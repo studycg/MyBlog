@@ -114,6 +114,8 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: '基础补充', link: '/morecpp/morecpp_01' },
+            { text: 'static总结', link: '/morecpp/static' },
+            { text: 'const总结', link: '/morecpp/const' },
             { text: '类和对象', link: '/morecpp/morecpp_02' },
             { text: '内存管理', link: '/morecpp/morecpp_03' },
             { text: '模板编程', link: '/morecpp/morecpp_04' },
@@ -161,7 +163,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: '预处理编译汇编链接过程', link: '/morecpp/other_01' },
-            { text: '关键字复习', link: '/morecpp/other_02' },
+            { text: '手撕STL', link: '/morecpp/other_02' },
 
           ]
         }
@@ -201,7 +203,8 @@ export default defineConfig({
             { text: 'Ray Tracing1', link: '/graphics/games101_12' },
             { text: 'Ray Tracing2', link: '/graphics/games101_13' },
             { text: 'Ray Tracing3', link: '/graphics/games101_14' },
-            { text: 'Ray Tracing4', link: '/graphics/games101_15' }
+            { text: 'Ray Tracing4', link: '/graphics/games101_15' },
+            { text: 'Material and Appearance', link: '/graphics/games101_16' }
           ]
         },
         {
@@ -217,7 +220,12 @@ export default defineConfig({
         {
           text: '准备面试',
           collapsed: false,
-          items:[{ text: '回顾', link: '/graphics/summary'}]
+          items:[
+            { text: '回顾', link: '/graphics/summary'},
+            { text: 'DrawCall', link: '/graphics/DrawCall' },
+            { text: '四元数', link: '/graphics/quaternion' },
+            { text: '反走样', link: '/graphics/antialiasing' },            
+          ]
         }
       ],
       '/hot100/': [
@@ -225,7 +233,7 @@ export default defineConfig({
           text: '刷算法题',
           collapsed: true,
           items: [
-             { text: '刷题总结', link: '/hot100/summary' },
+            { text: '刷题总结', link: '/hot100/summary' },
             { text: '哈希', link: '/hot100/questions1' },
             { text: '双指针', link: '/hot100/questions2' },
             { text: '滑动窗口', link: '/hot100/questions3' },
@@ -243,7 +251,7 @@ export default defineConfig({
             { text: '动态规划', link: '/hot100/questions15' },
             { text: '多维动态规划', link: '/hot100/questions16' },
             { text: '技巧', link: '/hot100/questions17' },
-            { text: '其它问题', link: '/hot100/questions_relative' }       
+            { text: '其它手撕代码', link: '/hot100/handcode' }       
           ]
         }
       ],
@@ -257,9 +265,10 @@ export default defineConfig({
           ]
         }
       ],
-      'unity/': [
+      'unity/': [        
         { text: 'Demo回顾', link: '/unity/Summary' },
         { text: '游戏相关知识', link: '/unity/OtherKnowledge' },
+        // { text: '状态同步与帧同步', link: '/unity/FrameStateSync' },
         { text: '玩家移动', link: '/unity/Player_Movement' },
         { text: '玩家攻击', link: '/unity/Player_Combat' },
         { text: '玩家射击', link: '/unity/Player_Bow' },
@@ -275,6 +284,7 @@ export default defineConfig({
         { text: '状态管理', link: '/unity/StatsManager' },
       ],
       '408_review/': [
+        { text: '函数调用/访问网站', link: '/408_review/CS_N' },
         { text: 'UDP', link: '/408_review/CN_01' },
         { text: 'TCP的握手挥手', link: '/408_review/CN_02' },
         { text: 'TCP的重传', link: '/408_review/CN_03' },

@@ -115,50 +115,49 @@ class MinStack {
 
 双栈法：
 
-`nums` 栈：存倍数。
+遇到`[`保留入栈线程，遇到`]`恢复并展开
 
-`strs` 栈：存之前拼好的前缀。
+`currnum`当前解析的数字
+
+`currstr`当前正在构造的字符串
+
+`numst`保存重复次数
+
+`strst`保存上一层字符串
+
+注意遇到`[]`要清除currstr和currsum状态
 
 ```c++
-string decodeString(string s) {
-    stack<int> nums;
-    stack<string> strs;
-
-    int currNum = 0;
-    string currStr = "";
-
-    for (char c : s) {
-        if (isdigit(c)) {
-            // 1. 处理数字 (可能是多位数，比如 100[a])
-            currNum = currNum * 10 + (c - '0');
-        } 
-        else if (c == '[') {
-            // 2. 遇到 [ : 存档，进栈
-            nums.push(currNum);
-            strs.push(currStr);
-
-            // 清空状态，准备处理括号里面的
-            currNum = 0;
-            currStr = "";
-        } 
-        else if (c == ']') {
-            // 3. 遇到 ] : 读档，出栈，组装
-            int k = nums.top(); nums.pop();      // 之前的倍数
-            string prevStr = strs.top(); strs.pop(); // 之前的前缀
-
-            // 组装：prevStr + (currStr * k)
-            for (int i = 0; i < k; i++) {
-                prevStr += currStr;
+string decodeString(string& s) {
+    stack<string> strst;
+    stack<int> numst;
+    int currnum = 0;
+    string currstr = "";
+    for (int i = 0; i < s.size(); i++) {
+        if (s[i] >= '0' && s[i] <= '9') {
+            currnum = currnum * 10 + (s[i] - '0');
+        }
+        else if (s[i] >= 'a' && s[i] <= 'z') {
+            currstr += s[i];
+        }
+        else if (s[i] == '[') {
+            strst.push(currstr);
+            numst.push(currnum);
+            currstr = "";
+            currnum = 0;
+        }
+        else if (s[i] == ']') {
+            currnum = numst.top();
+            numst.pop();
+            string prevstr = strst.top();
+            strst.pop();
+            for (int k = 0; k < currnum; k++) {
+                prevstr += currstr;
             }
-            // 更新当前字符串为组装后的结果
-            currStr = prevStr;
-        } 
-        else {
-            // 4. 普通字符 : 直接追加
-            currStr += c;
+            currstr = prevstr;
         }
     }
-    return currStr;
+    return currstr;
 }
 ```
 
@@ -326,3 +325,6 @@ int largestRectangleArea(vector<int>& heights) {
 }
 ```
 
+# 最长有效括号
+
+这道题也用单调栈做

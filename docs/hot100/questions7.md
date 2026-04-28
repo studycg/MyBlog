@@ -125,46 +125,30 @@ ListNode* reverseList(ListNode* head) {
 
 ```c++
 ListNode* reverseList(ListNode* head) {
-    // prev 初始化为 nullptr，因为反转后的尾节点要指向 nullptr
     ListNode* prev = nullptr;
     ListNode* curr = head;
 
     while (curr != nullptr) {
-        // 1. 暂存下一步（防止断链）
         ListNode* nextTemp = curr->next;
-
-        // 2. 修改指向（核心反转）
         curr->next = prev;
-
-        // 3. 整体向后移动
         prev = curr;
         curr = nextTemp;
     }
-
-    // 最后 curr 是 null，prev 才是新的头节点
     return prev;
 }
 ```
 
-递归法
+**递归法**
 
 ```c++
-// 递归版本逻辑
 ListNode* reverseList(ListNode* head) {
-    // 终止条件：如果是空或者只有一个节点，直接返回
-    if (head == nullptr || head->next == nullptr) return head;
-    
-    // 1. 递归去反转剩下的链表 (假设 head->next 之后都已经反转好了)
-    // newHead 是反转后的新头节点 (比如 5)
+    if (!head || !head->next) return head;
+
     ListNode* newHead = reverseList(head->next);
-    
-    // 2. 此时 head->next 指向的是反转后链表的"尾巴"
-    // 我们要把 head 自己挂到这个"尾巴"后面
+
     head->next->next = head;
-    
-    // 3. 现在的 head 变成了新的尾巴，要指向 null
     head->next = nullptr;
-    
+
     return newHead;
 }
 ```
@@ -258,7 +242,7 @@ bool isPalindrome(ListNode* head) {
 }
 ```
 
-奇书长度时：
+奇数长度时：
 
 ```c++
 1 → 2 → 3 → 2 → 1
@@ -276,6 +260,42 @@ bool isPalindrome(ListNode* head) {
 1 → [2] → 2 → 1
       ↑
      slow
+```
+
+**递归做**
+
+这道题使用快慢指针是为了得到链表的尾部信息，因为链表不能从后往前访问。
+
+但是，递归可以先到链表的尾部，再从后往前返回。
+
+此时需要一个全局的左指针。
+
+```c++
+class Solution {
+public:
+    ListNode* left;
+
+    bool dfs(ListNode* right) {
+        if (right == nullptr) return true;
+
+        // 递归到底
+        bool res = dfs(right->next);
+        if (!res) return false;
+
+        // 回溯时比较
+        if (left->val != right->val) return false;
+
+        // 左指针前进
+        left = left->next;
+
+        return true;
+    }
+
+    bool isPalindrome(ListNode* head) {
+        left = head;
+        return dfs(head);
+    }
+};
 ```
 
 # 环形链表
@@ -460,23 +480,23 @@ ListNode* mergeTwoLists_Iterative(ListNode* list1, ListNode* list2) {
 }
 ```
 
-递归法
+**递归法**
+
+这道题用递归的写法好理解
+
+每次从l1和l2头部选一个更小的，在递归处理剩余的。
 
 ```c++
-ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
-    // 终止条件：如果有一个为空，返回另一个
-    if (list1 == nullptr) return list2;
-    if (list2 == nullptr) return list1;
+ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
+    if (!l1) return l2;
+    if (!l2) return l1;
 
-    // 递归逻辑
-    if (list1->val <= list2->val) {
-        // list1 是头，它的 next 是 "list1剩下的" 和 "list2" 合并的结果
-        list1->next = mergeTwoLists(list1->next, list2);
-        return list1;
+    if (l1->val < l2->val) {
+        l1->next = mergeTwoLists(l1->next, l2);
+        return l1;
     } else {
-        // list2 是头
-        list2->next = mergeTwoLists(list1, list2->next);
-        return list2;
+        l2->next = mergeTwoLists(l1, l2->next);
+        return l2;
     }
 }
 ```
@@ -517,6 +537,33 @@ ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
     }
 
     return dummy->next;
+}
+```
+
+**递归做法**
+
+```c++
+ListNode* add(ListNode* l1, ListNode* l2, int carry) {
+    if (!l1 && !l2 && carry == 0) return nullptr;
+
+    int x = l1 ? l1->val : 0;
+    int y = l2 ? l2->val : 0;
+
+    int sum = x + y + carry;
+
+    ListNode* node = new ListNode(sum % 10);
+
+    node->next = add(
+        l1 ? l1->next : nullptr,
+        l2 ? l2->next : nullptr,
+        sum / 10
+    );
+
+    return node;
+}
+
+ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+    return add(l1, l2, 0);
 }
 ```
 
@@ -589,6 +636,31 @@ ListNode* removeNthFromEnd(ListNode* head, int n) {
 }
 ```
 
+**栈做法**
+
+这个其实也很直观
+
+都入栈 之后出栈n次 栈顶元素就是n-1个元素 也就是n的前一个
+
+```c++
+ListNode* removeNthFromEnd(ListNode* head, int n) {
+    ListNode* dummy = new ListNode(-1);
+    dummy->next = head;
+    ListNode* curr = dummy;
+    stack<ListNode*> st;
+    while (curr!=nullptr) {
+        st.push(curr);
+        curr = curr->next;
+    }
+    for (int i = 0; i < n; i++) {
+        st.pop();
+    }
+    curr = st.top();
+    curr->next = curr->next ? curr->next->next : nullptr;
+    return dummy->next;
+}
+```
+
 # 两两交换链表中的结点
 
 ![image-20260215180556738](./assets/image-20260215180556738.png)
@@ -658,59 +730,14 @@ ListNode* swapPairs(ListNode* head) {
 
 递归法
 
-**场景一：偶数个节点（`1 -> 2 -> null`）**
-
-1. **进入 `swapPairs(1)`**：
-   - `head` 是 `1`，`newHead` 是 `2`。
-   - 调用递归：`swapPairs(2->next)` 即 `swapPairs(null)`。
-2. **递归深处**：
-   - `swapPairs(null)` 触发 Base Case，直接返回 `nullptr`。
-3. **回到 `swapPairs(1)`**：
-   - 执行 `head->next = ...` (接收返回值)。
-   - 此时 `head->next` 变成了 `nullptr`。**注意：这里 `1` 不再指向 `2` 了，而是指向了 `null`。**
-   - 执行 `newHead->next = head`：即 `2 -> 1`。
-   - **结果**：`2 -> 1 -> null`。完美结束，无环。
-
-**场景二：奇数个节点（`1 -> 2 -> 3 -> null`）**
-
-这也是最容易让人担心的边缘情况。
-
-1. **进入 `swapPairs(1)`**：
-   - `head` 是 `1`，`newHead` 是 `2`。
-   - 调用递归：`swapPairs(3)`。
-2. **进入 `swapPairs(3)`（递归深处）**：
-   - `head` 是 `3`。
-   - 检查条件 `if (head->next == nullptr)` 成立！
-   - **Base Case 触发**：直接返回 `3` 这一节点本身。
-3. **回到 `swapPairs(1)`**：
-   - 递归返回了 `3`。
-   - 执行 `head->next = 3`。
-     - **动作**：斩断 `1 -> 2` 的旧连接，让 `1` 指向 `3`。
-     - 此时链表状态（局部）：`1 -> 3`。
-   - 执行 `newHead->next = head`。
-     - **动作**：让 `2` 指向 `1`。
-   - **结果**：`2 -> 1 -> 3 -> null`。
-   - 因为 `3` 本身的 `next` 已经是 `null` 了，所以整个链表自然结束，没有环。
-
 ```c++
-// 写法二：递归法 (逻辑极美)
 ListNode* swapPairs(ListNode* head) {
-    // 终止条件：没有节点或只有一个节点，没法换
-    if (head == nullptr || head->next == nullptr) {
-        return head;
-    }
+    if (!head || !head->next) return head;
+    ListNode* next = head->next;
 
-    // newHead 是这一对里的第二个节点 (交换后的头)
-    ListNode* newHead = head->next;
-
-    // 递归处理第三个节点及其之后的部分
-    // head (原来的第1个) 现在的 next 应该是递归返回的结果
-    head->next = swapPairs(newHead->next);
-
-    // 让 newHead 指向 head (2 -> 1)
-    newHead->next = head;
-
-    return newHead;
+    head->next = swapPairs(next->next);
+    next->next = head;
+    return next;
 }
 ```
 
@@ -858,6 +885,30 @@ ListNode* reverseKGroup(ListNode* head, int k) {
 
     // 4. 【交差】返回新的头
     return newHead;
+}
+```
+
+**递归做法**
+
+```c++
+ListNode* func(ListNode* head, int k) {
+	ListNode* curr = head;
+	ListNode* end = curr;
+	for (int i = 0; i < k - 1; i++) {
+		if (!end) return head;
+		end = end->next;
+	}
+	if (!end) return head;
+	ListNode* prev = nullptr;
+	ListNode* nextgroup = end->next;
+	while (curr != nextgroup) {
+		ListNode* nextnode = curr->next;
+		curr->next = prev;
+		prev = curr;
+		curr = nextnode;
+	}
+	head->next = func(nextgroup, k);
+	return prev;
 }
 ```
 

@@ -34,7 +34,7 @@ cout << v.capacity() << endl; //获取当前容器的最大容量
 
 >  reserve和resize
 
-通过reserse函数改变容器的最大容量，resize函数改变容器中的有效元素个数。
+通过reserve函数改变容器的最大容量，resize函数改变容器中的有效元素个数。
 
 >  reserve规则：
 
@@ -217,57 +217,8 @@ int main()
 
 # 迭代器失效问题
 
-情况1：
 
-```c++
-#include <iostream>
-#include <algorithm>
-#include <vector>
-using namespace std;
 
-int main()
-{
-	vector<int> v;
-	v.push_back(1);
-	v.push_back(2);
-	v.push_back(3);
-	v.push_back(4);
-	v.push_back(5);
-	//v: 1 2 3 4 5
-	vector<int>::iterator pos = find(v.begin(), v.end(), 2); //获取值为2的元素的迭代器
-	v.insert(pos, 10); //在值为2的元素的位置插入10
-	//v: 1 10 2 3 4 5
-	v.erase(pos); //删除元素2 ？？？error（迭代器失效）
-	//v: 1 2 3 4 5
-	return 0;
-}
-```
 
-情况2：
 
-```c++
-#include <iostream>
-#include <vector>
-using namespace std;
-
-int main()
-{
-	vector<int> v;
-	for (size_t i = 1; i <= 6; i++)
-	{
-		v.push_back(i);
-	}
-	vector<int>::iterator it = v.begin();
-	while (it != v.end())
-	{
-		if (*it % 2 == 0) //删除容器当中的全部偶数
-		{
-			v.erase(it);
-		}
-		it++;
-	}
-	return 0;
-}
-```
-
-这个情况当删除1 2 3 4 5 6时 删了6还会++ 导致迭代器最后是end()+1
+# vector的扩容

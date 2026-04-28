@@ -46,6 +46,76 @@ struct Node {
 1. 这多出来的 3 字节属于**内部碎片**。
 2. 如果 `malloc` 了 10000 个 `Node` 然后释放了其中下标为奇数的所有节点，此时产生的空隙属于什么还是**外部碎片**。
 
+# 深拷贝与浅拷贝
+
+**浅拷贝**：只复制表面，共享同一块内存。
+
+**深拷贝：**不仅复制指针，还复制指针指向的数据，拥有独立内存。
+
+浅拷贝：
+
+```c++
+struct A {
+    int* p;
+};
+
+A a;
+a.p = new int(10);
+
+A b = a;  // 默认拷贝（浅拷贝）
+```
+
+```c++
+a.p ─┐
+     ├──> [10]
+b.p ─┘
+```
+
+深拷贝：
+
+```c++
+A a;
+a.p = new int(10);
+
+A b;
+b.p = new int(*a.p);  // 手动深拷贝
+```
+
+```c++
+a.p ───> [10]
+b.p ───> [10]
+```
+
+## 浅拷贝与string
+
+```c++
+std::string a = "hello";
+std::string b = a;
+```
+
+不是
+
+```c++
+a.data ─┐
+        ├──> "hello"
+b.data ─┘
+```
+
+而是
+
+```c++
+a.data ───> "hello"
+b.data ───> "hello"
+```
+
+看起来很快可能因为：
+
+1. 小字符串优化
+2. 移动语义
+3. 编译器优化
+
+但C++11之前确实存在写时拷贝，那么不写的时候就不拷贝。
+
 # malloc与free
 
 ## malloc
@@ -140,6 +210,84 @@ struct Node {
 
 **既然有 malloc，为什么 C++ 还要 new？** 最根本的原因是 **构造函数**。对于自定义类，`malloc` 只管分地皮，不管盖房子（初始化成员变量、虚函数表等），这在面向对象编程里是不可接受的。
 
+# malloc1字节
+
+malloc隐藏的控制信息hander
+
+hander大小在glibc中：$header=2×sizeof(size\_t)=16$字节
+
+malloc1字节，会直接内存对齐到16字节。（8的倍数）
+
+所以hander+**对齐后的用户区**=32字节
+
+```c++
+[ prev_size | size | 用户数据(16字节) ]
+              		↑
+             		ptr
+[ prev_size (8B) ][ size (8B) ][ 用户数据 (~16B) ]
+```
+
+prev_size：前一个chunk的大小
+
+size：当前chunk的大小+标志位
+
+为什么不是对齐到8 16+8=24？
+
+- 整体数据向16字节对齐
+- glibc有一个**最小chunk限制**为32字节，支持合并，挂到双向列表。
+
+当chunk被free后，会变成：
+
+```c++
+[ prev_size | size | fd | bk | ... ]
+```
+
+fd（forward pointer）：指向下一个空闲块
+
+bk（backward pointer）：指向前一个空闲块
+
+4×8=32字节
+
+`size_t`是用来表示内存大小/对象大小的无符号整数类型，所以64位系统就是8字节。
+
+那既然malloc1字节用户空间内获得了16字节，后面的15字节可以偷偷用吗？
+
+```c++
+char* p = (char*)malloc(1);
+```
+
+`p`到``p+15`可以偷偷用，但是这是未定义行为。
+
+**什么模块会使用fd和bk等指针呢？**
+
+glibc的分配器大致分成：
+
+tcache（线程本地缓存）
+
+fastbin（小块单链表）
+
+unsorted bin（中转站）
+
+small bin（小块双向链表）
+
+large bin（大块有序链表）
+
+`fd / bk` 用在 双向链表
+
+`fd` 用在 fastbin（单链表）
+
+当free了一个chunk后：
+
+1. 很小的块，如32字节，优先放入tcache否则fastbin
+2. 较大的块，会进入unsorted bin，此时fd/kb构成双链表
+3. 当再次malloc时
+   1. 会先查tcache/fastbin
+   2. 找不到再找unsorted bin/small bin
+   3. 用fd遍历链表找合适块
+   4. 从链表中摘除(用fd+bk)
+
+当合并空闲块时，如果前后都是空闲块，会合并。
+
 > [!NOTE]
 >
 > 那么接下来进入new的学习
@@ -154,7 +302,7 @@ C++中常说的new与delete其实是`new/delete`表达式.
 
 ## new表达式的过程
 
-**第一步：分配内存 调用 `operator new` 函数。
+**第一步：分配内存** 调用 `operator new` 函数。
 
 ```c++
 void* mem = operator new(sizeof(Complex)); // 底层通常调用 malloc
@@ -504,6 +652,46 @@ struct Point{
 
 `delete[]` 会强行去 `ptr` 的左边读一个数当成长度。那个位置的数据是随机的垃圾值（比如 `1048576`）。编译器会尝试在错误的地址上执行 100 多万次析构函数，结果必然是**段错误 **。
 
+# 使用free释放new
+
+这是纯未定义行为
+
+new=operator new+构造
+
+```c++
+A* p = new A();
+//分下面几步
+void* raw = operator new(sizeof(A)); // 分配内存（类似 malloc）
+A* p = (A*)raw;
+p->A(); // 调用构造函数
+```
+
+delete=析构+operator delete
+
+```c++
+delete p;
+//分下面几步
+p->~A();              // 调用析构函数
+operator delete(p);   // 释放内存
+```
+
+free只释放函数，不调用析构函数。
+
+举个例子
+
+```c++
+class A {
+public:
+    int* data;
+    A() { data = new int[100]; }
+    ~A() { delete[] data; }
+};
+A* p = new A();
+free(p);
+```
+
+结果就是A对象的析构没执行，内存泄漏了。
+
 # operator new[]与operator delete[]
 
 | **动作**         | **表达式**   | **底层调用的函数 (分配器)**     |
@@ -680,11 +868,17 @@ std::unique_ptr<Foo> get() {
 
 # 异常处理机制
 
-
-
-
-
 # 内存对齐
+
+## 为什么要内存对齐
+
+CPU读取内存时，按照cache line或者总线宽度读取。
+
+在64位系统中，CPU一次读8字节。
+
+如果一个数据如int跨越了2个8字节块，那么CPU需要2次访问+拼接。
+
+## 内存对齐其它
 
 C++11 引入了原生关键字来控制对齐：
 
@@ -740,12 +934,6 @@ void* operator new(std::size_t size, std::align_val_t al);
 
  6、申请自定义类型对象时，malloc/free只会开辟空间，不会调用构造函数和析构函数，而new在申请空间后会调用构造函数完成对象的初始化，delete在释放空间前会调用析构函数完成空间中资源的清理。
 
-
-
-
-
-
-
 # 关于allocator
 
 ## 分权
@@ -785,9 +973,122 @@ void* operator new(std::size_t size, std::align_val_t al);
 
 # const与内存
 
+**情况A**
+
+```c++
+const int a = 10;
+int b = a;
+```
+
+可能会被编译成
+
+```c++
+int b = 10;
+```
+
+a可能根本没有内存
+
+**情况B**
+
+```c++
+const int a = 10;
+const int* p = &a;
+```
+
+此时一定有地址，且存在`.rodate`段
+
+**情况C**
+
+```c++
+const int global_val = 100; // 全局
+static const int file_val = 200; // 静态
+```
+
+存在`.rotate`段
+
+**情况D**
+
+```c++
+void func() {
+    const int b = 20;
+}
+```
+
+存在栈上
+
+const是运行时常量而constexpr是编译时常量
+
 # static与内存
 
-# 关于内存问题的面试反问
+**局部静态变量**
+
+```c++
+void func() {
+    static int a = 10;
+}
+```
+
+存在静态区`.data/.bss`，生命周期为程序整个运行期间，只初始化一次。
+
+**全局静态变量**
+
+```c++
+static int a = 10;
+```
+
+已初始化存在`.data`未初始化存在`.bss`
+
+**static const**
+
+```c++
+static const int a = 10;
+```
+
+static const存在`.rodata`
+
+**对类内存的影响**
+
+```c++
+class A {
+    static int x;
+};
+```
+
+`sizeof(A)是1`
+
+**另外**
+
+存入`.data`段还是`.bss`段是编译器决定的而不是运行时
+
+**另外**
+
+static和const会让全局变量的链接性变成内部链接性
+
+# 内存泄漏的检测方法
+
+## 内存泄漏的场景
+
+容器里如vector存裸指针会导致内存泄漏
+
+```c++
+struct A {
+    ~A() { std::cout << "destruct\n"; }
+};
+
+std::vector<A*> v;
+```
+
+指针本身只是一个地址，vector在析构时只会销毁存储在其中的地址值，而不会自动去调用这些地址所指向对象的析构函数。这就导致了内存泄漏。
+
+| **存储方式**                 | **析构时会自动调用对象析构函数吗？** | **建议**                   |
+| ---------------------------- | ------------------------------------ | -------------------------- |
+| `std::vector<T>`             | **是**                               | 首选，最简单               |
+| `std::vector<T*>`            | **否**                               | 会造成内存泄漏，需谨慎     |
+| `std::vector<unique_ptr<T>>` | **是**                               | 推荐，管理堆内存的最佳实践 |
+
+同样的，当vector扩容的时候，它确实也只会对旧地址中的内容进行位拷贝，或者移动，而不会去销毁指针指向的对象。
+
+# 关于TCmalloc
 
 > 现在的CAD内核中存在着大量的点线面等小内存的new 它们不但会造成Cookie的内存占比堆积 也会在多线程的情况下造成性能问题 所以换用Google的TCmalloc是后续的一个优化方向 这不但解决了性能和Cookie问题 也解决了未来扩展时Profiler的问题
 
